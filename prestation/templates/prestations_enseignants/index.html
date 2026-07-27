@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Prestations Enseignants - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Prestations Enseignants{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Prestations Enseignants</li>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">Prestations Enseignants</h4>
+        <p class="text-muted mb-0">Gestion des cours et prestations des enseignants</p>
+    </div>
+    <a href="{% url 'prestation_enseignant_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Nouvelle Prestation
+    </a>
+</div>
+
+<!-- Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 datatable">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">Enseignant</th>
+                        <th style="width: 15%;">Cours</th>
+                        <th style="width: 10%;">Classe</th>
+                        <th style="width: 10%;">Date</th>
+                        <th style="width: 10%;">Heure Début</th>
+                        <th style="width: 10%;">Heure Fin</th>
+                        <th style="width: 10%;">Durée</th>
+                        <th style="width: 15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pe in prestations_enseignants %}
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                {% if pe.prestation.agent.photo %}
+                                <img src="{{ pe.prestation.agent.photo.url }}" alt="{{ pe.prestation.agent.nom }}" class="avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%23374151%22/%3E%3Ctext x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3E{{ pe.prestation.agent.nom|first|upper }}%3C/text%3E%3C/svg%3E'">
+                                {% else %}
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23374151'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20'%3E{{ pe.prestation.agent.nom|first|upper }}%3C/text%3E%3C/svg%3E" alt="{{ pe.prestation.agent.nom }}" class="avatar">
+                                {% endif %}
+                                <div>
+                                    <div class="name">{{ pe.prestation.agent.nom_complet }}</div>
+                                    <div class="email">{{ pe.prestation.agent.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-info text-white rounded d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.875rem;">
+                                    <i class="bi bi-book"></i>
+                                </div>
+                                <strong>{{ pe.cours.libelle }}</strong>
+                            </div>
+                        </td>
+                        <td>{{ pe.classe.nom }}</td>
+                        <td>{{ pe.prestation.date|date:"d/m/Y" }}</td>
+                        <td>{{ pe.heure_debut|time:"H:i" }}</td>
+                        <td>{{ pe.heure_fin|time:"H:i" }}</td>
+                        <td>
+                            <span class="badge badge-primary">{{ pe.duree_cours }}</span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'prestation_enseignant_edit' pe.id %}" class="btn btn-sm btn-outline" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline btn-delete" data-url="{% url 'prestation_enseignant_delete' pe.id %}" data-name="cette prestation enseignant" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+                            <p class="text-muted mt-2">Aucune prestation enseignant trouvée</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

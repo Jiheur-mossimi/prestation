@@ -1,0 +1,13 @@
+{% load static %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard' %}">
+                <i class="bi bi-house-door"></i> Accueil
+            </a>
+        </li>
+        {% block breadcrumb_items %}
+        {% endblock %}
+    </ol>
+</nav>

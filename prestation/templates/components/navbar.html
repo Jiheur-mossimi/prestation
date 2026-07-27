@@ -1,0 +1,40 @@
+{% load static %}
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="navbar-left">
+        <button class="navbar-toggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <h5 class="mb-0">{% block page_title %}Tableau de bord{% endblock %}</h5>
+    </div>
+    
+    <div class="navbar-right">
+        <div class="navbar-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" placeholder="Rechercher...">
+        </div>
+        
+        <div class="navbar-actions">
+            <button class="navbar-action notification-badge">
+                <i class="bi bi-bell"></i>
+                <span class="badge notification-badge">3</span>
+            </button>
+            
+            <button class="navbar-action">
+                <i class="bi bi-chat-dots"></i>
+            </button>
+            
+            <div class="navbar-user">
+                {% if user.utilisateur.agent.photo %}
+                    <img src="{{ user.utilisateur.agent.photo.url }}" alt="{{ user.username }}">
+                {% else %}
+                    <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.username }}">
+                {% endif %}
+                <div class="navbar-user-info">
+                    <div class="navbar-user-name">{{ user.username }}</div>
+                    <div class="navbar-user-role">{{ user.utilisateur.get_role_display }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

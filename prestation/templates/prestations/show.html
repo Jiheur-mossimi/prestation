@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Détails Prestation - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Détails de la Prestation{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'prestations' %}">Prestations</a></li>
+<li class="breadcrumb-item active" aria-current="page">Détails</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Agent Info -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                {% if prestation.agent.photo %}
+                    <img src="{{ prestation.agent.photo.url }}" alt="{{ prestation.agent.nom_complet }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 3rem; font-weight: 600;">
+                        {{ prestation.agent.nom|first|upper }}
+                    </div>
+                {% endif %}
+                
+                <h4 class="mb-1">{{ prestation.agent.nom_complet }}</h4>
+                <p class="text-muted mb-3">{{ prestation.agent.get_type_agent_display }}</p>
+                
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <span class="badge badge-{% if prestation.statut == 'PRESENT' %}success{% elif prestation.statut == 'RETARD' %}warning{% elif prestation.statut == 'ABSENT' %}danger{% elif prestation.statut == 'EN_COURS' %}primary{% else %}secondary{% endif %} fs-6">
+                        {{ prestation.get_statut_display }}
+                    </span>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'prestation_edit' prestation.id %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-2"></i>Modifier
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Info -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Service</span>
+                    <strong>{{ prestation.agent.service.nom }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Email</span>
+                    <strong>{{ prestation.agent.email }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Téléphone</span>
+                    <strong>{{ prestation.agent.telephone }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">Matricule</span>
+                    <strong><code>{{ prestation.agent.matricule }}</code></strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details -->
+    <div class="col-lg-8">
+        <!-- Prestation Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>Détails de la Prestation
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Date</label>
+                        <p class="mb-0 fw-semibold">{{ prestation.date|date:"l d F Y" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Heure d'arrivée</label>
+                        <p class="mb-0 fw-semibold">{{ prestation.heure_arrivee|time:"H:i" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Heure de départ</label>
+                        <p class="mb-0 fw-semibold">
+                            {% if prestation.heure_depart %}
+                                {{ prestation.heure_depart|time:"H:i" }}
+                            {% else %}
+                                <span class="text-muted">Non enregistré</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Durée</label>
+                        <p class="mb-0 fw-semibold">
+                            {% if prestation.duree_prestation %}
+                                {{ prestation.duree_prestation }}
+                            {% else %}
+                                <span class="text-muted">En cours...</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                {% if prestation.observation %}
+                <div class="mt-3 pt-3 border-top">
+                    <label class="text-muted small">Observation</label>
+                    <p class="mb-0">{{ prestation.observation }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Cours et Classes -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-book me-2"></i>Cours et Classes
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Cours</th>
+                                <th>Classe</th>
+                                <th>Heure Début</th>
+                                <th>Heure Fin</th>
+                                <th>Durée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pc in prestation.prestations_cours.all %}
+                            <tr>
+                                <td><strong>{{ pc.cours.libelle }}</strong></td>
+                                <td>{{ pc.classe.nom }}</td>
+                                <td>{{ pc.heure_debut|time:"H:i" }}</td>
+                                <td>{{ pc.heure_fin|time:"H:i" }}</td>
+                                <td>{{ pc.duree_cours }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Aucun cours assigné
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2">
+            <a href="{% url 'prestations' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+            </a>
+            <a href="{% url 'prestation_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Nouvelle Prestation
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title }} - Gestion des Prestations{% endblock %}
+
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'prestations_enseignants' %}">Prestations Enseignants</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ form_title }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <i class="bi bi-easel me-2"></i>
+                    {{ form_title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-primary">
+                                <i class="bi bi-calendar-check me-2"></i>Prestation
+                            </h6>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Prestation de base <span class="required">*</span></label>
+                                <select name="prestation" class="form-select" required>
+                                    <option value="">Sélectionner une prestation</option>
+                                    {% for prestation in prestations %}
+                                    <option value="{{ prestation.id }}" {% if form.prestation.value|default:'' == prestation.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ prestation.agent.nom_complet }} - {{ prestation.date|date:"d/m/Y" }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.prestation.errors %}
+                                    <div class="text-danger mt-1">{{ form.prestation.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Cours <span class="required">*</span></label>
+                                <select name="cours" class="form-select" required>
+                                    <option value="">Sélectionner un cours</option>
+                                    {% for cour in cours_list %}
+                                    <option value="{{ cour.id }}" {% if form.cours.value|default:'' == cour.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ cour.code }} - {{ cour.libelle }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.cours.errors %}
+                                    <div class="text-danger mt-1">{{ form.cours.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Classe <span class="required">*</span></label>
+                                <select name="classe" class="form-select" required>
+                                    <option value="">Sélectionner une classe</option>
+                                    {% for classe in classes_list %}
+                                    <option value="{{ classe.id }}" {% if form.classe.value|default:'' == classe.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ classe.nom }} ({{ classe.niveau }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.classe.errors %}
+                                    <div class="text-danger mt-1">{{ form.classe.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-primary mt-4 mt-md-0">
+                                <i class="bi bi-clock me-2"></i>Horaires
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Heure Début <span class="required">*</span></label>
+                                        <input type="time" name="heure_debut" class="form-control" value="{{ form.heure_debut.value|default:'' }}" required>
+                                        {% if form.heure_debut.errors %}
+                                            <div class="text-danger mt-1">{{ form.heure_debut.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Heure Fin <span class="required">*</span></label>
+                                        <input type="time" name="heure_fin" class="form-control" value="{{ form.heure_fin.value|default:'' }}" required>
+                                        {% if form.heure_fin.errors %}
+                                            <div class="text-danger mt-1">{{ form.heure_fin.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Observation</label>
+                                <textarea name="observation" class="form-control" rows="4" placeholder="Notes sur le cours...">{{ form.observation.value|default:'' }}</textarea>
+                                {% if form.observation.errors %}
+                                    <div class="text-danger mt-1">{{ form.observation.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="card-footer bg-transparent border-top mt-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'prestations_enseignants' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

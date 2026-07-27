@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Connexion - Gestion des Prestations{% endblock %}
+
+{% block auth_content %}
+<div class="login-page">
+    <div class="login-container fade-in">
+        <!-- Illustration -->
+        <div class="login-illustration">
+            <img src="{% static 'images/login-illustration.svg' %}" alt="Illustration" onerror="this.style.display='none'">
+            <div id="illustration-placeholder" style="display: none; font-size: 8rem; margin-bottom: 2rem;">
+                <i class="bi bi-building"></i>
+            </div>
+            <h3>Gestion des Prestations</h3>
+            <p>Interface complète de gestion des agents et prestations pour établissements scolaires</p>
+        </div>
+        
+        <!-- Login Form -->
+        <div class="login-form-wrapper">
+        <div class="login-header">
+            <div class="login-logo">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" onerror="this.style.display='none'">
+                <div id="logo-placeholder" style="display: none; font-size: 3rem; color: var(--primary-color); margin-bottom: 0.75rem;">
+                    <i class="bi bi-building"></i>
+                </div>
+            </div>
+            <h2>Bienvenue</h2>
+            <p>Connectez-vous à votre espace</p>
+        </div>
+            
+            <form method="post" class="login-form" novalidate>
+                {% csrf_token %}
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <div class="form-group">
+                    <label class="form-label">Nom d'utilisateur</label>
+                    <input type="text" 
+                           name="username" 
+                           class="form-control" 
+                           placeholder="votre nom d'utilisateur" 
+                           required
+                           autofocus>
+                    {% if form.username.errors %}
+                        <div class="text-danger mt-1">
+                            {{ form.username.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <div class="password-field">
+                        <input type="password" 
+                               id="passwordInput"
+                               name="password" 
+                               class="form-control" 
+                               placeholder="••••••••" 
+                               required>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i id="passwordIcon" class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                        <div class="text-danger mt-1">
+                            {{ form.password.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group login-options">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                        <label class="form-check-label" for="remember">
+                            Se souvenir de moi
+                        </label>
+                    </div>
+                    <a href="#" class="forgot-password">
+                        <i class="bi bi-question-circle me-1"></i>Mot de passe oublié ?
+                    </a>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Connexion
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p class="mb-2">
+                    <small>© 2024 Gestion des Prestations. Tous droits réservés.</small>
+                </p>
+                <p class="mb-0">
+                    <small>Version 1.0 - Établissement Scolaire</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

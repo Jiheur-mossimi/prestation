@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Messages - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Messagerie{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Messages</li>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- Sidebar - Conversations -->
+    <div class="chat-sidebar">
+        <div class="chat-sidebar-header">
+            <h5>Messages</h5>
+        </div>
+        
+        <div class="chat-search">
+            <div class="position-relative">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" class="form-control ps-5" placeholder="Rechercher...">
+            </div>
+        </div>
+        
+        <div class="chat-conversations">
+            <!-- Conversation 1 - Active -->
+            <div class="chat-conversation active">
+                <img src="{% static 'images/avatar1.png' %}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect width=%2248%22 height=%2248%22 fill=%22%23667eea%22/%3E%3Ctext x=%2224%22 y=%2230%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3EM%3C/text%3E%3C/svg%3E'">
+                <div class="chat-conversation-info">
+                    <div class="chat-conversation-name">Marie Dupont</div>
+                    <div class="chat-conversation-preview">Merci pour l'information...</div>
+                </div>
+                <div class="chat-conversation-meta">
+                    <div class="chat-conversation-time">14:30</div>
+                    <span class="badge badge-primary mt-1">2</span>
+                </div>
+            </div>
+
+            <!-- Conversation 2 -->
+            <div class="chat-conversation">
+                <img src="{% static 'images/avatar2.png' %}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect width=%2248%22 height=%2248%22 fill=%22%2310b981%22/%3E%3Ctext x=%2224%22 y=%2230%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3EJ%3C/text%3E%3C/svg%3E'">
+                <div class="chat-conversation-info">
+                    <div class="chat-conversation-name">Jean Kongo</div>
+                    <div class="chat-conversation-preview">La réunion est confirmée...</div>
+                </div>
+                <div class="chat-conversation-meta">
+                    <div class="chat-conversation-time">Hier</div>
+                </div>
+            </div>
+
+            <!-- Conversation 3 -->
+            <div class="chat-conversation">
+                <img src="{% static 'images/avatar3.png' %}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect width=%2248%22 height=%2248%22 fill=%22%23f59e0b%22/%3E%3Ctext x=%2224%22 y=%2230%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3EP%3C/text%3E%3C/svg%3E'">
+                <div class="chat-conversation-info">
+                    <div class="chat-conversation-name">Pierre Mbala</div>
+                    <div class="chat-conversation-preview">D'accord, je vais vérifier</div>
+                </div>
+                <div class="chat-conversation-meta">
+                    <div class="chat-conversation-time">12/01</div>
+                </div>
+            </div>
+
+            <!-- Conversation 4 -->
+            <div class="chat-conversation">
+                <img src="{% static 'images/avatar4.png' %}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect width=%2248%22 height=%2248%22 fill=%22%23ef4444%22/%3E%3Ctext x=%2224%22 y=%2230%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3ES%3C/text%3E%3C/svg%3E'">
+                <div class="chat-conversation-info">
+                    <div class="chat-conversation-name">Sarah Lukasa</div>
+                    <div class="chat-conversation-preview">Merci beaucoup !</div>
+                </div>
+                <div class="chat-conversation-meta">
+                    <div class="chat-conversation-time">11/01</div>
+                    <span class="badge badge-primary mt-1">1</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="chat-main">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <img src="{% static 'images/avatar1.png' %}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%23667eea%22/%3E%3Ctext x=%2220%22 y=%2226%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2218%22%3EM%3C/text%3E%3C/svg%3E'">
+                <div>
+                    <div class="fw-semibold">Marie Dupont</div>
+                    <small class="text-muted">En ligne</small>
+                </div>
+            </div>
+            <div class="chat-header-actions">
+                <button class="btn btn-sm btn-outline">
+                    <i class="bi bi-telephone"></i>
+                </button>
+                <button class="btn btn-sm btn-outline">
+                    <i class="bi bi-camera-video"></i>
+                </button>
+                <button class="btn btn-sm btn-outline">
+                    <i class="bi bi-info-circle"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages">
+            <!-- Date Separator -->
+            <div class="text-center my-3">
+                <span class="badge badge-secondary">Aujourd'hui</span>
+            </div>
+
+            <!-- Message 1 - Received -->
+            <div class="chat-message">
+                <img src="{% static 'images/avatar1.png' %}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2236%22%3E%3Crect width=%2236%22 height=%2236%22 fill=%22%23667eea%22/%3E%3Ctext x=%2218%22 y=%2224%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22%3EM%3C/text%3E%3C/svg%3E'">
+                <div class="chat-message-content">
+                    <div class="chat-message-bubble">
+                        <p class="chat-message-text">Bonjour, j'aimerais avoir des informations sur la réunion de vendredi.</p>
+                    </div>
+                    <div class="chat-message-time">
+                        14:25
+                        <i class="bi bi-check2-all ms-1"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message 2 - Sent -->
+            <div class="chat-message sent">
+                <img src="{% static 'images/current-user.png' %}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2236%22%3E%3Crect width=%2236%22 height=%2236%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2218%22 y=%2224%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22%3EMoi%3C/text%3E%3C/svg%3E'">
+                <div class="chat-message-content">
+                    <div class="chat-message-bubble">
+                        <p class="chat-message-text">Bonjour Marie ! La réunion est prévue pour vendredi à 14h00 dans la salle de conférence.</p>
+                    </div>
+                    <div class="chat-message-time">
+                        14:28
+                        <i class="bi bi-check2-all ms-1"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message 3 - Received -->
+            <div class="chat-message">
+                <img src="{% static 'images/avatar1.png' %}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2236%22%3E%3Crect width=%2236%22 height=%2236%22 fill=%22%23667eea%22/%3E%3Ctext x=%2218%22 y=%2224%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22%3EM%3C/text%3E%3C/svg%3E'">
+                <div class="chat-message-content">
+                    <div class="chat-message-bubble">
+                        <p class="chat-message-text">Parfait, merci pour l'information !</p>
+                    </div>
+                    <div class="chat-message-time">
+                        14:30
+                        <i class="bi bi-check2-all ms-1"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message 4 - Received -->
+            <div class="chat-message">
+                <img src="{% static 'images/avatar1.png' %}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2236%22%3E%3Crect width=%2236%22 height=%2236%22 fill=%22%23667eea%22/%3E%3Ctext x=%2218%22 y=%2224%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22%3EM%3C/text%3E%3C/svg%3E'">
+                <div class="chat-message-content">
+                    <div class="chat-message-bubble">
+                        <p class="chat-message-text">Est-ce que je dois apporter des documents ?</p>
+                    </div>
+                    <div class="chat-message-time">
+                        14:30
+                        <i class="bi bi-check2-all ms-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Footer - Input -->
+        <div class="chat-footer">
+            <div class="chat-input-wrapper">
+                <button class="chat-action-btn">
+                    <i class="bi bi-plus-circle"></i>
+                </button>
+                
+                <textarea class="chat-input" rows="1" placeholder="Écrivez votre message..."></textarea>
+                
+                <div class="chat-actions">
+                    <button class="chat-action-btn">
+                        <i class="bi bi-emoji-smile"></i>
+                    </button>
+                    <button class="chat-action-btn">
+                        <i class="bi bi-paperclip"></i>
+                    </button>
+                    <button class="chat-action-btn">
+                        <i class="bi bi-image"></i>
+                    </button>
+                </div>
+                
+                <button class="chat-send-btn">
+                    <i class="bi bi-send"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Paramètres - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Paramètres{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Paramètres</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Establishment Settings -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-building me-2"></i>Informations de l'Établissement
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label class="form-label">Nom de l'établissement <span class="required">*</span></label>
+                        <input type="text" name="nom_etablissement" class="form-control" value="École Supérieure de Technologie" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Adresse <span class="required">*</span></label>
+                        <textarea name="adresse" class="form-control" rows="2" required>123 Avenue de la République, Kinshasa, RD Congo</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Téléphone <span class="required">*</span></label>
+                                <input type="text" name="telephone" class="form-control phone-input" value="+243 81 234 5678" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Email <span class="required">*</span></label>
+                                <input type="email" name="email" class="form-control" value="contact@ecole.cd" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Logo</label>
+                        <input type="file" name="logo" class="form-control file-input" data-preview="logoPreview" accept="image/*">
+                        <small class="form-text">Format: PNG, JPG. Taille recommandée: 200x200px</small>
+                    </div>
+
+                    {% if parametres.logo %}
+                    <div class="form-group">
+                        <img id="logoPreview" src="{{ parametres.logo.url }}" alt="Logo" style="max-width: 150px; border-radius: var(--radius-lg); display: block;">
+                    </div>
+                    {% else %}
+                    <div class="form-group">
+                        <img id="logoPreview" src="#" alt="Logo" style="max-width: 150px; border-radius: var(--radius-lg); display: none;">
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Enregistrer
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-lock me-2"></i>Sécurité
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" name="two_factor" class="form-check-input" id="twoFactor">
+                        <label class="form-check-label" for="twoFactor">
+                            Activer l'authentification à deux facteurs
+                        </label>
+                    </div>
+                    <small class="form-text">Les utilisateurs devront vérifier leur identité à chaque connexion.</small>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" name="force_password_change" class="form-check-input" id="forcePasswordChange" checked>
+                        <label class="form-check-label" for="forcePasswordChange">
+                            Forcer le changement de mot de passe tous les 90 jours
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" formaction="{% url 'parametres_securite' %}">
+                    <i class="bi bi-check-circle me-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Settings -->
+    <div class="col-lg-6">
+        <!-- Localization -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-globe me-2"></i>Localisation
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label class="form-label">Langue <span class="required">*</span></label>
+                        <select name="langue" class="form-select" required>
+                            <option value="fr" selected>Français</option>
+                            <option value="en">English</option>
+                            <option value="sw">Swahili</option>
+                            <option value="ln">Lingala</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Fuseau horaire <span class="required">*</span></label>
+                        <select name="fuseau_horaire" class="form-select" required>
+                            <option value="Africa/Kinshasa" selected>Afrique/Kinshasa (UTC+1)</option>
+                            <option value="Africa/Lagos">Afrique/Lagos (UTC+1)</option>
+                            <option value="Europe/Paris">Europe/Paris (UTC+1/+2)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Format de date</label>
+                        <select name="format_date" class="form-select">
+                            <option value="d/m/Y" selected>JJ/MM/AAAA</option>
+                            <option value="m/d/Y">MM/JJ/AAAA</option>
+                            <option value="Y-m-d">AAAA-MM-JJ</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Format d'heure</label>
+                        <select name="format_heure" class="form-select">
+                            <option value="24h" selected>24 heures</option>
+                            <option value="12h">12 heures (AM/PM)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Enregistrer
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-palette me-2"></i>Apparence
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Thème</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input type="radio" name="theme" id="themeLight" class="form-check-input" checked>
+                            <label class="form-check-label" for="themeLight">
+                                <i class="bi bi-sun me-1"></i>Clair
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="theme" id="themeDark" class="form-check-input">
+                            <label class="form-check-label" for="themeDark">
+                                <i class="bi bi-moon me-1"></i>Sombre
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="theme" id="themeAuto" class="form-check-input">
+                            <label class="form-check-label" for="themeAuto">
+                                <i class="bi bi-laptop me-1"></i>Auto
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Couleur principale</label>
+                    <div class="d-flex gap-2">
+                        <input type="color" name="couleur_principale" value="#3b82f6" class="form-control form-control-color" style="width: 60px;">
+                        <input type="text" class="form-control" value="#3b82f6" readonly>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" formaction="{% url 'parametres_apparence' %}">
+                    <i class="bi bi-check-circle me-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+
+        <!-- Messaging Settings -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-chat-dots me-2"></i>Messagerie
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" name="messaging_enabled" class="form-check-input" id="messagingEnabled" checked>
+                        <label class="form-check-label" for="messagingEnabled">
+                            Activer la messagerie interne
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" name="notifications_email" class="form-check-input" id="notificationsEmail">
+                        <label class="form-check-label" for="notificationsEmail">
+                            Envoyer des notifications par email
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" formaction="{% url 'parametres_messagerie' %}">
+                    <i class="bi bi-check-circle me-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

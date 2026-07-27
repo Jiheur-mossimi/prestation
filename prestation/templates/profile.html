@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon Profil - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Mon Profil{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Mon Profil</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Profile Card -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                {% if user.utilisateur.agent.photo %}
+                    <img src="{{ user.utilisateur.agent.photo.url }}" alt="{{ user.username }}" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px; font-size: 4rem; font-weight: 600;">
+                        {{ user.username|first|upper }}
+                    </div>
+                {% endif %}
+                
+                <h4 class="mb-1">{{ user.utilisateur.agent.nom_complet }}</h4>
+                <p class="text-muted mb-3">{{ user.utilisateur.get_role_display }}</p>
+                
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <span class="badge badge-success">
+                        <i class="bi bi-circle-fill me-1"></i>Actif
+                    </span>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="openModal('editProfileModal')">
+                        <i class="bi bi-pencil me-2"></i>Modifier le profil
+                    </button>
+                    <button class="btn btn-outline" onclick="openModal('passwordModal')">
+                        <i class="bi bi-key me-2"></i>Changer le mot de passe
+                    </button>
+                    <button class="btn btn-outline" onclick="document.getElementById('photoInput').click()">
+                        <i class="bi bi-camera me-2"></i>Changer la photo
+                    </button>
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="uploadPhoto(this)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Info -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations Rapides</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Matricule</span>
+                    <strong><code>{{ user.utilisateur.agent.matricule }}</code></strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Nom d'utilisateur</span>
+                    <strong><i class="bi bi-person-circle me-1"></i>{{ user.username }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Service</span>
+                    <strong>{{ user.utilisateur.agent.service.nom }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Email</span>
+                    <strong>{{ user.email }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">Téléphone</span>
+                    <strong>{{ user.utilisateur.agent.telephone }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details -->
+    <div class="col-lg-8">
+        <!-- Personal Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person me-2"></i>Informations Personnelles
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Nom complet</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.nom }} {{ user.utilisateur.agent.postnom }} {{ user.utilisateur.agent.prenom }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Sexe</label>
+                        <p class="mb-0 fw-semibold">{% if user.utilisateur.agent.sexe == 'M' %}Masculin{% else %}Féminin{% endif %}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Date de naissance</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.date_naissance|date:"d/m/Y"|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Lieu de naissance</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.lieu_naissance|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Nationalité</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.nationalite }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-telephone me-2"></i>Contact et Localisation
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Email</label>
+                        <p class="mb-0 fw-semibold">
+                            <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Téléphone</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.telephone }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Adresse</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.adresse|default:"Non renseignée" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Origin Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-geo-alt me-2"></i>Origine
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Province d'origine</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.province_origine|default:"Non renseignée" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Territoire</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.territoire_origine|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Secteur</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.secteur|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Groupement</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.groupement|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="text-muted small">Village</label>
+                        <p class="mb-0 fw-semibold">{{ user.utilisateur.agent.village_origine|default:"Non renseigné" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Prestations -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>Dernières Prestations
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Heure Arrivée</th>
+                                <th>Heure Départ</th>
+                                <th>Durée</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prestation in user.utilisateur.agent.prestations.all|slice:":5" %}
+                            <tr>
+                                <td>{{ prestation.date|date:"d/m/Y" }}</td>
+                                <td>{{ prestation.heure_arrivee|time:"H:i" }}</td>
+                                <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
+                                <td>{{ prestation.duree_prestation|default:"-" }}</td>
+                                <td>
+                                    <span class="badge badge-{% if prestation.statut == 'PRESENT' %}success{% elif prestation.statut == 'RETARD' %}warning{% elif prestation.statut == 'ABSENT' %}danger{% else %}info{% endif %}">
+                                        {{ prestation.get_statut_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Aucune prestation enregistrée
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5>Modifier le profil</h5>
+            <button class="btn" onclick="closeModal('editProfileModal')">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form method="post" action="{% url 'profile_update' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Téléphone</label>
+                    <input type="text" name="telephone" class="form-control" value="{{ user.utilisateur.agent.telephone }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Adresse</label>
+                    <textarea name="adresse" class="form-control" rows="2">{{ user.utilisateur.agent.adresse }}</textarea>
+                </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('editProfileModal')">Annuler</button>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+            </form>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5>Changer le mot de passe</h5>
+            <button class="btn" onclick="closeModal('passwordModal')">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form method="post" action="{% url 'change_password' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Mot de passe actuel</label>
+                    <input type="password" name="old_password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nouveau mot de passe</label>
+                    <input type="password" name="new_password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirmer le mot de passe</label>
+                    <input type="password" name="confirm_password" class="form-control" required>
+                </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('passwordModal')">Annuler</button>
+            <button type="submit" class="btn btn-primary">Changer</button>
+        </div>
+            </form>
+    </div>
+</div>
+<script>
+function uploadPhoto(input) {
+    if (input.files && input.files[0]) {
+        const formData = new FormData();
+        formData.append('photo', input.files[0]);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch("{% url 'profile_update' %}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors de l\'upload de la photo');
+        });
+    }
+}
+</script>
+{% endblock %}

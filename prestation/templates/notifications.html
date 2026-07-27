@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Notifications{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Notifications</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="#" class="btn btn-primary">
+                        <i class="bi bi-envelope me-2"></i>Toutes
+                    </a>
+                    <a href="#" class="btn btn-outline">
+                        <i class="bi bi-envelope-open me-2"></i>Non lues
+                    </a>
+                    <a href="#" class="btn btn-outline">
+                        <i class="bi bi-chat-dots me-2"></i>Messages
+                    </a>
+                    <a href="#" class="btn btn-outline">
+                        <i class="bi bi-check-circle me-2"></i>Approbations
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-9">
+        <div class="notifications-list">
+            <!-- Notification 1 - Unread -->
+            <div class="notification-item unread">
+                <div class="notification-icon message">
+                    <i class="bi bi-envelope"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Nouveau message</div>
+                    <div class="notification-description">
+                        Marie Dupont vous a envoyé un message concernant la réunion de vendredi.
+                    </div>
+                    <div class="notification-time">
+                        <i class="bi bi-clock me-1"></i>Il y a 5 minutes
+                        <span class="badge badge-primary ms-2">Non lu</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification 2 - Unread -->
+            <div class="notification-item unread">
+                <div class="notification-icon approval">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Demande d'approbation</div>
+                    <div class="notification-description">
+                        Jean Kongo demande l'approbation de sa prestation du 15/01/2025.
+                    </div>
+                    <div class="notification-time">
+                        <i class="bi bi-clock me-1"></i>Il y a 15 minutes
+                        <span class="badge badge-primary ms-2">Non lu</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification 3 - Read -->
+            <div class="notification-item">
+                <div class="notification-icon system">
+                    <i class="bi bi-info-circle"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Mise à jour système</div>
+                    <div class="notification-description">
+                        Le système a été mis à jour avec de nouvelles fonctionnalités.
+                    </div>
+                    <div class="notification-time">
+                        <i class="bi bi-clock me-1"></i>Il y a 2 heures
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification 4 - Read -->
+            <div class="notification-item">
+                <div class="notification-icon message">
+                    <i class="bi bi-envelope"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Rappel de réunion</div>
+                    <div class="notification-description">
+                        Réunion du personnel prévue demain à 14h00 dans la salle de conférence.
+                    </div>
+                    <div class="notification-time">
+                        <i class="bi bi-clock me-1"></i>Hier à 16:30
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification 5 - Read -->
+            <div class="notification-item">
+                <div class="notification-icon approval">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Prestation approuvée</div>
+                    <div class="notification-description">
+                        Votre prestation du 14/01/2025 a été approuvée par le préfet.
+                    </div>
+                    <div class="notification-time">
+                        <i class="bi bi-clock me-1"></i>Hier à 10:15
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification 6 - Read -->
+            <div class="notification-item">
+                <div class="notification-icon system">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Sécurité</div>
+                    <div class="notification-description">
+                        Nouvelle connexion détectée depuis Kinshasa, RD Congo.
+                    </div>
+                    <div class="notification-time">
+                        <i class="bi bi-clock me-1"></i>12/01/2025
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button class="btn btn-outline">
+                <i class="bi bi-arrow-down me-2"></i>Charger plus
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

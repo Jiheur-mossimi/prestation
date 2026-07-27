@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des Prestations - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Gestion des Prestations{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Prestations</li>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">Liste des Prestations</h4>
+        <p class="text-muted mb-0">Suivi quotidien des présences</p>
+    </div>
+    <a href="{% url 'prestation_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Nouvelle Prestation
+    </a>
+</div>
+
+<!-- Filter Card -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <input type="date" class="form-control" name="date" value="{{ date_filter|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="statut">
+                    <option value="">Tous les statuts</option>
+                    <option value="PRESENT">Présent</option>
+                    <option value="RETARD">Retard</option>
+                    <option value="ABSENT">Absent</option>
+                    <option value="EN_COURS">En cours</option>
+                    <option value="TERMINE">Terminé</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="service">
+                    <option value="">Tous les services</option>
+                    {% for service in services %}
+                    <option value="{{ service.id }}">{{ service.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline w-100">
+                    <i class="bi bi-funnel me-2"></i>Filtrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 datatable">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">Photo</th>
+                        <th style="width: 15%;">Agent</th>
+                        <th style="width: 10%;">Service</th>
+                        <th style="width: 10%;">Cours</th>
+                        <th style="width: 10%;">Classe</th>
+                        <th style="width: 8%;">Date</th>
+                        <th style="width: 8%;">Heure Arrivée</th>
+                        <th style="width: 8%;">Heure Départ</th>
+                        <th style="width: 7%;">Durée</th>
+                        <th style="width: 8%;">Statut</th>
+                        <th style="width: 8%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestation in prestations %}
+                    <tr>
+                        <td>
+                            {% if prestation.agent.photo %}
+                            <img src="{{ prestation.agent.photo.url }}" alt="{{ prestation.agent.nom }}" class="avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%23374151%22/%3E%3Ctext x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3E{{ prestation.agent.nom|first|upper }}%3C/text%3E%3C/svg%3E'">
+                            {% else %}
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23374151'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20'%3E{{ prestation.agent.nom|first|upper }}%3C/text%3E%3C/svg%3E" alt="{{ prestation.agent.nom }}" class="avatar">
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="name">{{ prestation.agent.nom_complet }}</div>
+                        </td>
+                        <td>{{ prestation.agent.service.nom }}</td>
+                        <td>
+                            {% for pc in prestation.prestations_cours.all %}
+                                {% if forloop.first %}
+                                    {{ pc.cours.libelle }}
+                                {% endif %}
+                            {% empty %}
+                                -
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for pc in prestation.prestations_cours.all %}
+                                {% if forloop.first %}
+                                    {{ pc.classe.nom }}
+                                {% endif %}
+                            {% empty %}
+                                -
+                            {% endfor %}
+                        </td>
+                        <td>{{ prestation.date|date:"d/m/Y" }}</td>
+                        <td>{{ prestation.heure_arrivee|time:"H:i" }}</td>
+                        <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
+                        <td>{{ prestation.duree_prestation|default:"-" }}</td>
+                        <td>
+                            {% if prestation.statut == 'PRESENT' %}
+                            <span class="badge badge-success">Présent</span>
+                            {% elif prestation.statut == 'RETARD' %}
+                            <span class="badge badge-warning">Retard</span>
+                            {% elif prestation.statut == 'ABSENT' %}
+                            <span class="badge badge-danger">Absent</span>
+                            {% elif prestation.statut == 'EN_COURS' %}
+                            <span class="badge badge-primary">En cours</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Terminé</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'prestation_show' prestation.id %}" class="btn btn-sm btn-outline" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'prestation_edit' prestation.id %}" class="btn btn-sm btn-outline" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline btn-delete" data-url="{% url 'prestation_delete' prestation.id %}" data-name="cette prestation" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+                            <p class="text-muted mt-2">Aucune prestation trouvée</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

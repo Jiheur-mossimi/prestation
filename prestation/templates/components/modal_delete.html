@@ -1,0 +1,41 @@
+{% load static %}
+<!-- Generic Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5>
+                <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                Confirmer la suppression
+            </h5>
+            <button class="btn" onclick="closeModal('deleteModal')">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p>Êtes-vous sûr de vouloir supprimer <strong id="deleteItemName"></strong> ?</p>
+            <p class="text-muted small">
+                <i class="bi bi-info-circle me-1"></i>
+                Cette action est irréversible. Toutes les données associées seront définitivement perdues.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('deleteModal')">
+                <i class="bi bi-arrow-left me-2"></i>Annuler
+            </button>
+            <form id="deleteForm" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash me-2"></i>Supprimer
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+window.openDeleteModal = function(url, itemName) {
+    document.getElementById('deleteForm').action = url;
+    document.getElementById('deleteItemName').textContent = itemName;
+    openModal('deleteModal');
+};
+</script>

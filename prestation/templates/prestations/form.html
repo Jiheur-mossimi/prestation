@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title }} - Gestion des Prestations{% endblock %}
+
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'prestations' %}">Prestations</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ form_title }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <i class="bi bi-calendar-check me-2"></i>
+                    {{ form_title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row">
+                        <!-- Informations Prestation -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-primary">
+                                <i class="bi bi-info-circle me-2"></i>Informations Prestation
+                            </h6>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Agent <span class="required">*</span></label>
+                                <select name="agent" class="form-select" required>
+                                    <option value="">Sélectionner un agent</option>
+                                    {% for agent in agents %}
+                                    <option value="{{ agent.id }}" {% if form.agent.value|default:'' == agent.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ agent.nom_complet }} - {{ agent.service.nom }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.agent.errors %}
+                                    <div class="text-danger mt-1">{{ form.agent.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Date <span class="required">*</span></label>
+                                <input type="date" name="date" class="form-control" value="{{ form.date.value|default:'' }}" required>
+                                {% if form.date.errors %}
+                                    <div class="text-danger mt-1">{{ form.date.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Heure d'arrivée <span class="required">*</span></label>
+                                        <input type="time" name="heure_arrivee" class="form-control" value="{{ form.heure_arrivee.value|default:'' }}" required>
+                                        {% if form.heure_arrivee.errors %}
+                                            <div class="text-danger mt-1">{{ form.heure_arrivee.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Heure de départ</label>
+                                        <input type="time" name="heure_depart" class="form-control" value="{{ form.heure_depart.value|default:'' }}">
+                                        {% if form.heure_depart.errors %}
+                                            <div class="text-danger mt-1">{{ form.heure_depart.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Statut <span class="required">*</span></label>
+                                <select name="statut" class="form-select" required>
+                                    <option value="">Sélectionner</option>
+                                    <option value="PRESENT" {% if form.statut.value == 'PRESENT' %}selected{% endif %}>Présent</option>
+                                    <option value="RETARD" {% if form.statut.value == 'RETARD' %}selected{% endif %}>Retard</option>
+                                    <option value="ABSENT" {% if form.statut.value == 'ABSENT' %}selected{% endif %}>Absent</option>
+                                    <option value="EN_COURS" {% if form.statut.value == 'EN_COURS' %}selected{% endif %}>En cours</option>
+                                    <option value="TERMINE" {% if form.statut.value == 'TERMINE' %}selected{% endif %}>Terminé</option>
+                                </select>
+                                {% if form.statut.errors %}
+                                    <div class="text-danger mt-1">{{ form.statut.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Observation</label>
+                                <textarea name="observation" class="form-control" rows="3" placeholder="Notes ou observations...">{{ form.observation.value|default:'' }}</textarea>
+                                {% if form.observation.errors %}
+                                    <div class="text-danger mt-1">{{ form.observation.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Cours et Classes -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-primary mt-4 mt-md-0">
+                                <i class="bi bi-book me-2"></i>Cours et Classes
+                            </h6>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Cours <span class="required">*</span></label>
+                                <select name="cours" class="form-select" required>
+                                    <option value="">Sélectionner un cours</option>
+                                    {% for cour in cours_list %}
+                                    <option value="{{ cour.id }}" {% if form.cours.value|default:'' == cour.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ cour.code }} - {{ cour.libelle }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.cours.errors %}
+                                    <div class="text-danger mt-1">{{ form.cours.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Classe <span class="required">*</span></label>
+                                <select name="classe" class="form-select" required>
+                                    <option value="">Sélectionner une classe</option>
+                                    {% for classe in classes_list %}
+                                    <option value="{{ classe.id }}" {% if form.classe.value|default:'' == classe.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ classe.nom }} ({{ classe.niveau }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.classe.errors %}
+                                    <div class="text-danger mt-1">{{ form.classe.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Type de prestation</label>
+                                <select name="type_prestation" class="form-select">
+                                    <option value="NORMALE" {% if form.type_prestation.value == 'NORMALE' %}selected{% endif %}>Normale</option>
+                                    <option value="SUPPLEMENTAIRE" {% if form.type_prestation.value == 'SUPPLEMENTAIRE' %}selected{% endif %}>Supplémentaire</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="card-footer bg-transparent border-top mt-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'prestations' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des Cours - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Gestion des Cours{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Cours</li>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">Liste des Cours</h4>
+        <p class="text-muted mb-0">Gérez les cours de l'établissement</p>
+    </div>
+    <a href="{% url 'cours_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Nouveau Cours
+    </a>
+</div>
+
+<!-- Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 datatable">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">Code</th>
+                        <th style="width: 30%;">Libellé</th>
+                        <th style="width: 15%;">Coefficient</th>
+                        <th style="width: 15%;">Statut</th>
+                        <th style="width: 10%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cour in cours %}
+                    <tr>
+                        <td><code class="fs-6">{{ cour.code }}</code></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-info text-white rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.25rem;">
+                                    <i class="bi bi-book"></i>
+                                </div>
+                                <div>
+                                    <strong>{{ cour.libelle }}</strong>
+                                    {% if cour.description %}
+                                        <br><small class="text-muted">{{ cour.description|truncatechars:40 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-primary fs-6">x{{ cour.coefficient }}</span>
+                        </td>
+                        <td>
+                            {% if cour.actif %}
+                            <span class="badge badge-success">Actif</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'cours_show' cour.id %}" class="btn btn-sm btn-outline" title="Consulter">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'cours_edit' cour.id %}" class="btn btn-sm btn-outline" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline btn-delete" data-url="{% url 'cours_delete' cour.id %}" data-name="{{ cour.libelle }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+                            <p class="text-muted mt-2">Aucun cours trouvé</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

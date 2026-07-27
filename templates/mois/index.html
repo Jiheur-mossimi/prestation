@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mois - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Gestion des Mois{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Mois</li>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-calendar-month me-2"></i>Liste des Mois
+            </h5>
+            <a href="{% url 'mois_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Nouveau Mois
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Libellé</th>
+                        <th style="width: 20%;">Numéro</th>
+                        <th style="width: 20%;">Année</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mois in mois_list %}
+                    <tr>
+                        <td><strong>{{ mois.libelle }}</strong></td>
+                        <td>{{ mois.mois_num }}</td>
+                        <td>{{ mois.annee }}</td>
+                        <td>
+                            <a href="{% url 'mois_show' mois.id %}" class="btn btn-sm btn-outline-primary" title="Consulter">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'mois_edit' mois.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger btn-delete" data-url="{% url 'mois_delete' mois.id %}" data-name="{{ mois.libelle|escapejs }}" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">
+                            Aucun mois enregistré
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

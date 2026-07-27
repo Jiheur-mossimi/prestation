@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title }} - Gestion des Prestations{% endblock %}
+
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'classes' %}">Classes</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ form_title }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <i class="bi bi-building me-2"></i>
+                    {{ form_title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Nom de la classe <span class="required">*</span></label>
+                                <input type="text" name="nom" class="form-control" value="{{ form.nom.value|default:'' }}" required placeholder="Ex: 6ème A, Terminale C...">
+                                {% if form.nom.errors %}
+                                    <div class="text-danger mt-1">{{ form.nom.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Niveau <span class="required">*</span></label>
+                                <select name="niveau" class="form-select" required>
+                                    <option value="">Sélectionner</option>
+                                    <option value="6ème" {% if form.niveau.value == '6ème' %}selected{% endif %}>6ème</option>
+                                    <option value="5ème" {% if form.niveau.value == '5ème' %}selected{% endif %}>5ème</option>
+                                    <option value="4ème" {% if form.niveau.value == '4ème' %}selected{% endif %}>4ème</option>
+                                    <option value="3ème" {% if form.niveau.value == '3ème' %}selected{% endif %}>3ème</option>
+                                    <option value="2ème" {% if form.niveau.value == '2ème' %}selected{% endif %}>2ème</option>
+                                    <option value="1ère" {% if form.niveau.value == '1ère' %}selected{% endif %}>1ère</option>
+                                    <option value="Terminale" {% if form.niveau.value == 'Terminale' %}selected{% endif %}>Terminale</option>
+                                </select>
+                                {% if form.niveau.errors %}
+                                    <div class="text-danger mt-1">{{ form.niveau.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Effectif <span class="required">*</span></label>
+                                <input type="number" name="effectif" class="form-control" value="{{ form.effectif.value|default:0 }}" min="0" required>
+                                <small class="form-text">Nombre d'élèves dans la classe</small>
+                                {% if form.effectif.errors %}
+                                    <div class="text-danger mt-1">{{ form.effectif.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Statut <span class="required">*</span></label>
+                                <select name="status" class="form-select" required>
+                                    <option value="ACTIF" {% if form.status.value == 'ACTIF' %}selected{% endif %}>Actif</option>
+                                    <option value="INACTIF" {% if form.status.value == 'INACTIF' %}selected{% endif %}>Inactif</option>
+                                    <option value="ARCHIVE" {% if form.status.value == 'ARCHIVE' %}selected{% endif %}>Archivé</option>
+                                </select>
+                                {% if form.status.errors %}
+                                    <div class="text-danger mt-1">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="card-footer bg-transparent border-top mt-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'classes' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

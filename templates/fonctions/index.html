@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fonctions - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Gestion des Fonctions{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Fonctions</li>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-briefcase me-2"></i>Liste des Fonctions
+            </h5>
+            <a href="{% url 'fonction_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Nouvelle Fonction
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Libellé</th>
+                        <th style="width: 55%;">Description</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fonction in fonctions %}
+                    <tr>
+                        <td><strong>{{ fonction.libelle }}</strong></td>
+                        <td>{{ fonction.description|truncatechars:50 }}</td>
+                        <td>
+                            <a href="{% url 'fonction_show' fonction.id %}" class="btn btn-sm btn-outline-primary" title="Consulter">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'fonction_edit' fonction.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger btn-delete" data-url="{% url 'fonction_delete' fonction.id %}" data-name="{{ fonction.libelle|escapejs }}" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-4 text-muted">
+                            Aucune fonction enregistrée
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

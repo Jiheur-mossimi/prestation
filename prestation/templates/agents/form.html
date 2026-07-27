@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title }} - Gestion des Prestations{% endblock %}
+
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'agents' %}">Agents</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ form_title }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <i class="bi bi-person-plus me-2"></i>
+                    {{ form_title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate
+                  data-confirm
+                  data-confirm-title="Confirmer l'enregistrement"
+                  data-confirm-message="Êtes-vous sûr de vouloir enregistrer cet agent ?"
+                  data-confirm-details="Vérifiez les informations avant de confirmer.">
+                    {% csrf_token %}
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row">
+                        <!-- Informations Personnelles -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-primary">
+                                <i class="bi bi-person me-2"></i>Informations Personnelles
+                            </h6>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Matricule <span class="required">*</span></label>
+                                <input type="text" name="matricule" class="form-control" value="{{ form.matricule.value|default:'' }}" required placeholder="Ex: AGT001">
+                                {% if form.matricule.errors %}
+                                    <div class="text-danger mt-1">{{ form.matricule.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Nom <span class="required">*</span></label>
+                                        <input type="text" name="nom" class="form-control" value="{{ form.nom.value|default:'' }}" required>
+                                        {% if form.nom.errors %}
+                                            <div class="text-danger mt-1">{{ form.nom.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Postnom <span class="required">*</span></label>
+                                        <input type="text" name="postnom" class="form-control" value="{{ form.postnom.value|default:'' }}" required>
+                                        {% if form.postnom.errors %}
+                                            <div class="text-danger mt-1">{{ form.postnom.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Prénom <span class="required">*</span></label>
+                                <input type="text" name="prenom" class="form-control" value="{{ form.prenom.value|default:'' }}" required>
+                                {% if form.prenom.errors %}
+                                    <div class="text-danger mt-1">{{ form.prenom.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Sexe <span class="required">*</span></label>
+                                        <select name="sexe" class="form-select" required>
+                                            <option value="">Sélectionner</option>
+                                            <option value="M" {% if form.sexe.value == 'M' %}selected{% endif %}>Masculin</option>
+                                            <option value="F" {% if form.sexe.value == 'F' %}selected{% endif %}>Féminin</option>
+                                        </select>
+                                        {% if form.sexe.errors %}
+                                            <div class="text-danger mt-1">{{ form.sexe.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Date de Naissance</label>
+                                        <input type="date" name="date_naissance" class="form-control" value="{{ form.date_naissance.value|default:'' }}">
+                                        {% if form.date_naissance.errors %}
+                                            <div class="text-danger mt-1">{{ form.date_naissance.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Lieu de Naissance</label>
+                                <input type="text" name="lieu_naissance" class="form-control" value="{{ form.lieu_naissance.value|default:'' }}">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Nationalité</label>
+                                <input type="text" name="nationalite" class="form-control" value="{{ form.nationalite.value|default:'Congolaise' }}">
+                            </div>
+                        </div>
+
+                        <!-- Contact et Localisation -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-primary mt-4 mt-md-0">
+                                <i class="bi bi-telephone me-2"></i>Contact et Localisation
+                            </h6>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Email <span class="required">*</span></label>
+                                <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}" required>
+                                {% if form.email.errors %}
+                                    <div class="text-danger mt-1">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Téléphone <span class="required">*</span></label>
+                                <input type="text" name="telephone" class="form-control phone-input" value="{{ form.telephone.value|default:'' }}" required>
+                                {% if form.telephone.errors %}
+                                    <div class="text-danger mt-1">{{ form.telephone.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Adresse</label>
+                                <textarea name="adresse" class="form-control" rows="2">{{ form.adresse.value|default:'' }}</textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Providence d'Origine</label>
+                                        <input type="text" name="province_origine" class="form-control" value="{{ form.province_origine.value|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Territoire</label>
+                                        <input type="text" name="territoire_origine" class="form-control" value="{{ form.territoire_origine.value|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Secteur</label>
+                                        <input type="text" name="secteur" class="form-control" value="{{ form.secteur.value|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Groupement</label>
+                                        <input type="text" name="groupement" class="form-control" value="{{ form.groupement.value|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Village</label>
+                                <input type="text" name="village_origine" class="form-control" value="{{ form.village_origine.value|default:'' }}">
+                            </div>
+                        </div>
+
+                        <!-- Professionnel -->
+                        <div class="col-12">
+                            <h6 class="mb-3 text-primary mt-4">
+                                <i class="bi bi-briefcase me-2"></i>Informations Professionnelles
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Service <span class="required">*</span></label>
+                                        <select name="service" class="form-select" required>
+                                            <option value="">Sélectionner un service</option>
+                                            {% for service in services %}
+                                            <option value="{{ service.id }}" {% if form.service.value|default:'' == service.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ service.nom }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if form.service.errors %}
+                                            <div class="text-danger mt-1">{{ form.service.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Type d'Agent <span class="required">*</span></label>
+                                        <select name="type_agent" class="form-select" required>
+                                            <option value="">Sélectionner</option>
+                                            <option value="ENSEIGNANT" {% if form.type_agent.value == 'ENSEIGNANT' %}selected{% endif %}>Enseignant</option>
+                                            <option value="ADMINISTRATIF" {% if form.type_agent.value == 'ADMINISTRATIF' %}selected{% endif %}>Administratif</option>
+                                            <option value="DISCIPLINE" {% if form.type_agent.value == 'DISCIPLINE' %}selected{% endif %}>Préfet de discipline</option>
+                                        </select>
+                                        {% if form.type_agent.errors %}
+                                            <div class="text-danger mt-1">{{ form.type_agent.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Photo</label>
+                                <input type="file" name="photo" class="form-control file-input" data-preview="photoPreview" accept="image/*">
+                                <small class="form-text">Format: JPG, PNG. Taille max: 2MB</small>
+                                {% if form.photo.errors %}
+                                    <div class="text-danger mt-1">{{ form.photo.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            {% if agent.photo %}
+                            <div class="form-group">
+                                <img id="photoPreview" src="{{ agent.photo.url }}" alt="Preview" style="max-width: 150px; border-radius: var(--radius-lg); display: block;">
+                            </div>
+                            {% else %}
+                            <div class="form-group">
+                                <img id="photoPreview" src="#" alt="Preview" style="max-width: 150px; border-radius: var(--radius-lg); display: none;">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="card-footer bg-transparent border-top mt-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'agents' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des Services - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Gestion des Services{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Services</li>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">Liste des Services</h4>
+        <p class="text-muted mb-0">Gérez les services de l'établissement</p>
+    </div>
+    <a href="{% url 'service_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Nouveau Service
+    </a>
+</div>
+
+<!-- Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 datatable">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Nom</th>
+                        <th style="width: 35%;">Description</th>
+                        <th style="width: 15%;">Nombre d'agents</th>
+                        <th style="width: 15%;">Date création</th>
+                        <th style="width: 10%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for service in services %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.25rem;">
+                                    <i class="bi bi-diagram-3"></i>
+                                </div>
+                                <strong>{{ service.nom }}</strong>
+                            </div>
+                        </td>
+                        <td>{{ service.description|truncatechars:50|default:"-" }}</td>
+                        <td>
+                            <span class="badge badge-primary">{{ service.agents.count }}</span>
+                        </td>
+                        <td>{{ service.created_at|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'service_show' service.id %}" class="btn btn-sm btn-outline" title="Consulter">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'service_edit' service.id %}" class="btn btn-sm btn-outline" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline btn-delete" data-url="{% url 'service_delete' service.id %}" data-name="{{ service.nom }}" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+                            <p class="text-muted mt-2">Aucun service trouvé</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

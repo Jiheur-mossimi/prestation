@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ agent.nom_complet }} - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Détails de l'Agent{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'agents' %}">Agents</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ agent.nom_complet }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Profile Card -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                {% if agent.photo %}
+                    <img src="{{ agent.photo.url }}" alt="{{ agent.nom_complet }}" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px; font-size: 4rem; font-weight: 600;">
+                        {{ agent.nom|first|upper }}
+                    </div>
+                {% endif %}
+                
+                <h4 class="mb-1">{{ agent.nom_complet }}</h4>
+                <p class="text-muted mb-3">{{ agent.get_type_agent_display }}</p>
+                
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <span class="badge badge-{% if agent.etat %}success{% else %}danger{% endif %}">
+                        <i class="bi bi-circle-fill me-1"></i>
+                        {% if agent.etat %}Actif{% else %}Inactif{% endif %}
+                    </span>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'agent_edit' agent.id %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-2"></i>Modifier le profil
+                    </a>
+                    <button class="btn btn-outline" onclick="openModal('passwordModal')">
+                        <i class="bi bi-key me-2"></i>Changer le mot de passe
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Info -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations Rapides</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Matricule</span>
+                    <strong><code>{{ agent.matricule }}</code></strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Nom d'utilisateur</span>
+                    <strong>
+                        {% if agent.utilisateur %}
+                            <i class="bi bi-person-circle me-1"></i>{{ agent.utilisateur.user.username }}
+                        {% else %}
+                            <span class="text-muted">Aucun</span>
+                        {% endif %}
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Service</span>
+                    <strong>{{ agent.service.nom }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Email</span>
+                    <strong>{{ agent.email }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">Téléphone</span>
+                    <strong>{{ agent.telephone }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details -->
+    <div class="col-lg-8">
+        <!-- Personal Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person me-2"></i>Informations Personnelles
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Nom complet</label>
+                        <p class="mb-0 fw-semibold">{{ agent.nom }} {{ agent.postnom }} {{ agent.prenom }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Sexe</label>
+                        <p class="mb-0 fw-semibold">{% if agent.sexe == 'M' %}Masculin{% else %}Féminin{% endif %}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Date de naissance</label>
+                        <p class="mb-0 fw-semibold">{{ agent.date_naissance|date:"d/m/Y"|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Lieu de naissance</label>
+                        <p class="mb-0 fw-semibold">{{ agent.lieu_naissance|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Nationalité</label>
+                        <p class="mb-0 fw-semibold">{{ agent.nationalite }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-telephone me-2"></i>Contact et Localisation
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Email</label>
+                        <p class="mb-0 fw-semibold">
+                            <a href="mailto:{{ agent.email }}">{{ agent.email }}</a>
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Téléphone</label>
+                        <p class="mb-0 fw-semibold">{{ agent.telephone }}</p>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="text-muted small">Adresse</label>
+                        <p class="mb-0 fw-semibold">{{ agent.adresse|default:"Non renseignée" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Origin Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-geo-alt me-2"></i>Origine
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Province d'origine</label>
+                        <p class="mb-0 fw-semibold">{{ agent.province_origine|default:"Non renseignée" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Territoire</label>
+                        <p class="mb-0 fw-semibold">{{ agent.territoire_origine|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Secteur</label>
+                        <p class="mb-0 fw-semibold">{{ agent.secteur|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Groupement</label>
+                        <p class="mb-0 fw-semibold">{{ agent.groupement|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="text-muted small">Village</label>
+                        <p class="mb-0 fw-semibold">{{ agent.village_origine|default:"Non renseigné" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Prestations -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>Dernières Prestations
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Heure Arrivée</th>
+                                <th>Heure Départ</th>
+                                <th>Durée</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prestation in agent.prestations.all|slice:":5" %}
+                            <tr>
+                                <td>{{ prestation.date|date:"d/m/Y" }}</td>
+                                <td>{{ prestation.heure_arrivee|time:"H:i" }}</td>
+                                <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
+                                <td>{{ prestation.duree_prestation|default:"-" }}</td>
+                                <td>
+                                    <span class="badge badge-{% if prestation.statut == 'PRESENT' %}success{% elif prestation.statut == 'RETARD' %}warning{% elif prestation.statut == 'ABSENT' %}danger{% else %}info{% endif %}">
+                                        {{ prestation.get_statut_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Aucune prestation enregistrée
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

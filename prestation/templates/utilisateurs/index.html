@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Utilisateurs - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Gestion des Utilisateurs{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Utilisateurs</li>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">Liste des Utilisateurs</h4>
+        <p class="text-muted mb-0">Gérez les comptes utilisateurs du système</p>
+    </div>
+    <a href="#" class="btn btn-primary">
+        <i class="bi bi-person-plus me-2"></i>Nouvel Utilisateur
+    </a>
+</div>
+
+<!-- Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 datatable">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Utilisateur</th>
+                        <th style="width: 15%;">Rôle</th>
+                        <th style="width: 20%;">Agent lié</th>
+                        <th style="width: 15%;">Dernière connexion</th>
+                        <th style="width: 15%;">Statut</th>
+                        <th style="width: 10%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for utilisateur in utilisateurs %}
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <img src="{% static 'images/default-avatar.png' %}" alt="" class="avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3E{{ utilisateur.user.username|first|upper }}%3C/text%3E%3C/svg%3E'">
+                                <div>
+                                    <div class="name">{{ utilisateur.user.username }}</div>
+                                    <div class="email">{{ utilisateur.user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-{% if utilisateur.role == 'ADMIN' %}danger{% elif utilisateur.role == 'SECRETAIRE' %}info{% elif utilisateur.role == 'ENSEIGNANT' %}success{% elif utilisateur.role == 'PREFET' %}warning{% else %}secondary{% endif %}">
+                                {{ utilisateur.get_role_display }}
+                            </span>
+                        </td>
+                        <td>{{ utilisateur.agent.nom_complet }}</td>
+                        <td>{{ utilisateur.user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</td>
+                        <td>
+                            {% if utilisateur.must_change_password %}
+                            <span class="badge badge-warning">Mot de passe à changer</span>
+                            {% else %}
+                            <span class="badge badge-success">Actif</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline" title="Réinitialiser mot de passe">
+                                    <i class="bi bi-key"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+                            <p class="text-muted mt-2">Aucun utilisateur trouvé</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

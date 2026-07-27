@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title }} - Gestion des Prestations{% endblock %}
+
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'cours' %}">Cours</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ form_title }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <i class="bi bi-book me-2"></i>
+                    {{ form_title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label class="form-label">Code du cours <span class="required">*</span></label>
+                        <input type="text" name="code" class="form-control" value="{{ form.code.value|default:'' }}" required placeholder="Ex: MATH101, FRAN201..." style="text-transform: uppercase;">
+                        <small class="form-text">Format: 2-4 lettres suivies de 1-3 chiffres (ex: MATH101)</small>
+                        {% if form.code.errors %}
+                            <div class="text-danger mt-1">{{ form.code.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Libellé <span class="required">*</span></label>
+                        <input type="text" name="libelle" class="form-control" value="{{ form.libelle.value|default:'' }}" required placeholder="Ex: Mathématiques, Français...">
+                        {% if form.libelle.errors %}
+                            <div class="text-danger mt-1">{{ form.libelle.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Coefficient <span class="required">*</span></label>
+                        <input type="number" name="coefficient" class="form-control" value="{{ form.coefficient.value|default:1 }}" min="1" max="10" required>
+                        <small class="form-text">Valeur entre 1 et 10</small>
+                        {% if form.coefficient.errors %}
+                            <div class="text-danger mt-1">{{ form.coefficient.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Description du cours...">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                            <div class="text-danger mt-1">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" name="actif" class="form-check-input" id="actif" {% if form.actif.value|default:True %}checked{% endif %}>
+                            <label class="form-check-label" for="actif">Cours actif</label>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="card-footer bg-transparent border-top mt-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'cours' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

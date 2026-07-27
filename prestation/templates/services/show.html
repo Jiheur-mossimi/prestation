@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ service.nom }} - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Détails du Service{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'services' %}">Services</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ service.nom }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-diagram-3 me-2 text-primary"></i>{{ service.nom }}
+                </h5>
+                <div class="btn-group">
+                    <a href="{% url 'service_edit' service.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Modifier
+                    </a>
+                    <a href="{% url 'services' %}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i>Retour
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6 class="text-muted mb-2">Description</h6>
+                        <p>{{ service.description|default:"Aucune description fournie" }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-light p-4 rounded">
+                            <h6 class="text-muted mb-3"><i class="bi bi-info-circle me-2"></i>Informations</h6>
+                            <div class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted">Créé le</span>
+                                <strong>{{ service.created_at|date:"d/m/Y" }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted">Modifié le</span>
+                                <strong>{{ service.updated_at|date:"d/m/Y" }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between py-2">
+                                <span class="text-muted">Agents</span>
+                                <strong><span class="badge badge-primary">{{ service.agents.count }}</span></strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents du service -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2 text-primary"></i>Agents du service
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Agent</th>
+                                <th>Matricule</th>
+                                <th>Type</th>
+                                <th>Email</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for agent in service.agents.all %}
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        {% if agent.photo %}
+                                            <img src="{{ agent.photo.url }}" alt="" class="avatar">
+                                        {% else %}
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                {{ agent.nom|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="name">{{ agent.nom_complet }}</div>
+                                            <div class="email">{{ agent.fonction }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><code>{{ agent.matricule }}</code></td>
+                                <td>{{ agent.get_type_agent_display }}</td>
+                                <td>{{ agent.email }}</td>
+                                <td>
+                                    <span class="badge badge-{% if agent.etat %}success{% else %}danger{% endif %}">
+                                        {% if agent.etat %}Actif{% else %}Inactif{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'agent_show' agent.id %}" class="btn btn-sm btn-outline">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    Aucun agent dans ce service
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

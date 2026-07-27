@@ -1,0 +1,231 @@
+:{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestion des Prestations{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+    
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay"></div>
+
+    {% if user.is_authenticated %}
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="{% static 'images/logo.png' %}" alt="Logo">
+                <h4>Gestion Prestations</h4>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li class="menu-header">Main</li>
+                <li>
+                    <a href="{% url 'dashboard' %}" class="{% if request.path == '/' or request.path == '/dashboard/' %}active{% endif %}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Tableau de bord</span>
+                    </a>
+                </li>
+                
+                <li class="menu-header">Gestion</li>
+                <li>
+                    <a href="{% url 'agents' %}" class="{% if 'agents' in request.path %}active{% endif %}">
+                        <i class="bi bi-people"></i>
+                        <span>Agents</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'services' %}" class="{% if 'services' in request.path %}active{% endif %}">
+                        <i class="bi bi-diagram-3"></i>
+                        <span>Services</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'classes' %}" class="{% if 'classes' in request.path %}active{% endif %}">
+                        <i class="bi bi-building"></i>
+                        <span>Classes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'cours' %}" class="{% if 'cours' in request.path %}active{% endif %}">
+                        <i class="bi bi-book"></i>
+                        <span>Cours</span>
+                    </a>
+                </li>
+                
+                <li class="menu-header">Référentiels</li>
+                <li>
+                    <a href="{% url 'fonctions' %}" class="{% if 'fonctions' in request.path %}active{% endif %}">
+                        <i class="bi bi-briefcase"></i>
+                        <span>Fonctions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'mois' %}" class="{% if 'mois' in request.path %}active{% endif %}">
+                        <i class="bi bi-calendar-month"></i>
+                        <span>Mois</span>
+                    </a>
+                </li>
+                
+                <li class="menu-header">Communication</li>
+                <li>
+                    <a href="{% url 'messages' %}" class="{% if 'messages' in request.path %}active{% endif %}">
+                        <i class="bi bi-chat-dots"></i>
+                        <span>Messages</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'notifications' %}" class="{% if 'notifications' in request.path %}active{% endif %}">
+                        <i class="bi bi-bell"></i>
+                        <span>Notifications</span>
+                    </a>
+                </li>
+                
+                <li class="menu-header">Autres</li>
+                <li>
+                    <a href="{% url 'rapports' %}" class="{% if 'rapports' in request.path %}active{% endif %}">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span>Rapports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'utilisateurs' %}" class="{% if 'utilisateurs' in request.path %}active{% endif %}">
+                        <i class="bi bi-person-gear"></i>
+                        <span>Utilisateurs</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'parametres' %}" class="{% if 'parametres' in request.path %}active{% endif %}">
+                        <i class="bi bi-gear"></i>
+                        <span>Paramètres</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <p class="mb-0 text-white-50">
+                    <small>Gestion des Prestations v1.0</small>
+                </p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Navbar -->
+            <nav class="navbar">
+                <div class="navbar-left">
+                    <button class="navbar-toggle">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <h5 class="mb-0">{% block page_title %}Tableau de bord{% endblock %}</h5>
+                </div>
+                
+                <div class="navbar-right">
+                    <button class="navbar-toggle" onclick="toggleSidebar()">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    
+                    <div class="navbar-search">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" placeholder="Rechercher...">
+                    </div>
+                    
+                    <div class="navbar-actions">
+                        <a href="{% url 'notifications' %}" class="navbar-action notification-badge" title="Notifications">
+                            <i class="bi bi-bell"></i>
+                            <span class="badge notification-badge">3</span>
+                        </a>
+                        
+                        <a href="{% url 'messages' %}" class="navbar-action" title="Messages">
+                            <i class="bi bi-chat-dots"></i>
+                        </a>
+                        
+                        <div class="navbar-user" id="userDropdown" data-toggle="dropdown">
+                            {% if user.utilisateur.agent.photo %}
+                                <img src="{{ user.utilisateur.agent.photo.url }}" alt="{{ user.username }}">
+                            {% else %}
+                                <div class="navbar-user-avatar">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                            {% endif %}
+                            <div class="navbar-user-info">
+                                <div class="navbar-user-name">{{ user.username }}</div>
+                                <div class="navbar-user-role">{{ user.utilisateur.get_role_display }}</div>
+                            </div>
+                            <div class="dropdown-menu" id="userDropdownMenu">
+                                <a href="{% url 'profile' %}" class="dropdown-item">
+                                    <i class="bi bi-person-badge me-2"></i>Mon Profil
+                                </a>
+                                <a href="{% url 'messages' %}" class="dropdown-item">
+                                    <i class="bi bi-envelope me-2"></i>Messages
+                                </a>
+                                <a href="{% url 'notifications' %}" class="dropdown-item">
+                                    <i class="bi bi-bell-fill me-2"></i>Notifications
+                                </a>
+                                <a href="{% url 'parametres' %}" class="dropdown-item">
+                                    <i class="bi bi-sliders me-2"></i>Paramètres
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a href="{% url 'logout' %}" class="dropdown-item text-danger">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door"></i> Accueil</a></li>
+                        {% block breadcrumb %}{% endblock %}
+                    </ol>
+                </nav>
+                
+                <!-- Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <!-- Page Content -->
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    {% else %}
+        {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="{% static 'js/app.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    {% include 'components/modal_delete.html' %}
+</body>
+</html>

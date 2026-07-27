@@ -1,0 +1,141 @@
+{% load static %}
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <img src="{% static 'images/logo.png' %}" alt="Logo" onerror="this.style.display='none'">
+        <div id="sidebar-logo-placeholder" style="display: none; width: 40px; height: 40px; background: var(--primary-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; font-weight: bold;">
+            <i class="bi bi-building"></i>
+        </div>
+        <h4>Gestion Prestations</h4>
+    </div>
+    
+    <ul class="sidebar-menu">
+        <li class="menu-header">Main</li>
+        <li>
+            <a href="{% url 'dashboard' %}" class="{% if request.path == '/' or request.path == '/dashboard/' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i>
+                <span>Tableau de bord</span>
+            </a>
+        </li>
+        
+        <li class="menu-header">Gestion</li>
+        <li>
+            <a href="{% url 'agents' %}" class="{% if 'agents' in request.path %}active{% endif %}">
+                <i class="bi bi-people"></i>
+                <span>Agents</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'services' %}" class="{% if 'services' in request.path %}active{% endif %}">
+                <i class="bi bi-diagram-3"></i>
+                <span>Services</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'classes' %}" class="{% if 'classes' in request.path %}active{% endif %}">
+                <i class="bi bi-building"></i>
+                <span>Classes</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'cours' %}" class="{% if 'cours' in request.path %}active{% endif %}">
+                <i class="bi bi-book"></i>
+                <span>Cours</span>
+            </a>
+        </li>
+        
+        <li class="menu-header">Référentiels</li>
+        <li>
+            <a href="{% url 'fonctions' %}" class="{% if 'fonctions' in request.path %}active{% endif %}">
+                <i class="bi bi-briefcase"></i>
+                <span>Fonctions</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'mois' %}" class="{% if 'mois' in request.path %}active{% endif %}">
+                <i class="bi bi-calendar-month"></i>
+                <span>Mois</span>
+            </a>
+        </li>
+        
+        <li class="menu-header">Communication</li>
+        <li>
+            <a href="{% url 'messages' %}" class="{% if 'messages' in request.path %}active{% endif %}">
+                <i class="bi bi-chat-dots"></i>
+                <span>Messages</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'notifications' %}" class="{% if 'notifications' in request.path %}active{% endif %}">
+                <i class="bi bi-bell"></i>
+                <span>Notifications</span>
+            </a>
+        </li>
+        
+        <li class="menu-header">Autres</li>
+        <li>
+            <a href="{% url 'rapports' %}" class="{% if 'rapports' in request.path %}active{% endif %}">
+                <i class="bi bi-file-earmark-text"></i>
+                <span>Rapports</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'utilisateurs' %}" class="{% if 'utilisateurs' in request.path %}active{% endif %}">
+                <i class="bi bi-person-gear"></i>
+                <span>Utilisateurs</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'parametres' %}" class="{% if 'parametres' in request.path %}active{% endif %}">
+                <i class="bi bi-gear"></i>
+                <span>Paramètres</span>
+            </a>
+        </li>
+    </ul>
+    
+    <div class="sidebar-footer">
+        <div class="sidebar-user-session">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="sidebar-user-avatar">
+                    {% if user.utilisateur.agent.photo %}
+                        <img src="{{ user.utilisateur.agent.photo.url }}" alt="" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                    {% else %}
+                        <i class="bi bi-person-fill"></i>
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name">{{ user.username }}</div>
+                    <div class="sidebar-user-role">{{ user.utilisateur.get_role_display }}</div>
+                </div>
+            </div>
+            <a href="#" class="btn btn-sm btn-outline-light w-100" onclick="event.preventDefault(); openModal('logoutConfirmModal')">
+                <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
+            </a>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutConfirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5><i class="bi bi-question-circle text-warning me-2"></i>Confirmer la déconnexion</h5>
+                <button class="btn" onclick="closeModal('logoutConfirmModal')"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+                <p class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Vous devrez vous reconnecter pour accéder à l'application.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('logoutConfirmModal')">
+                    <i class="bi bi-arrow-left me-2"></i>Annuler
+                </button>
+                <a href="{% url 'logout' %}" class="btn btn-danger">
+                    <i class="bi bi-box-arrow-right me-2"></i>Se déconnecter
+                </a>
+            </div>
+        </div>
+    </div>
+</aside>
