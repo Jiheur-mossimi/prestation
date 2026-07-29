@@ -64,14 +64,14 @@
                             {% endif %}
                         </td>
                         <td>
-                            <div class="btn-group">
-                                <a href="{% url 'cours_show' cour.id %}" class="btn btn-sm btn-outline" title="Consulter">
+                            <div class="action-buttons">
+                                <a href="{% url 'cours_show' cour.id %}" class="btn action-btn action-btn-view" title="Consulter">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{% url 'cours_edit' cour.id %}" class="btn btn-sm btn-outline" title="Modifier">
+                                <a href="{% url 'cours_edit' cour.id %}" class="btn action-btn action-btn-edit" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button class="btn btn-sm btn-outline btn-delete" data-url="{% url 'cours_delete' cour.id %}" data-name="{{ cour.libelle }}">
+                                <button class="btn action-btn action-btn-delete btn-delete" data-url="{% url 'cours_delete' cour.id %}" data-name="{{ cour.libelle }}">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>

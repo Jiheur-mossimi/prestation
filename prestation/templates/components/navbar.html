@@ -28,7 +28,7 @@
                 {% if user.utilisateur.agent.photo %}
                     <img src="{{ user.utilisateur.agent.photo.url }}" alt="{{ user.username }}">
                 {% else %}
-                    <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.username }}">
+                    <img src="{% static 'images/default-avatar.svg' %}" alt="{{ user.username }}">
                 {% endif %}
                 <div class="navbar-user-info">
                     <div class="navbar-user-name">{{ user.username }}</div>

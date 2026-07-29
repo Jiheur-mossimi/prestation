@@ -63,39 +63,16 @@
                         </td>
                         <td>{{ classe.created_at|date:"d/m/Y" }}</td>
                         <td>
-                            <div class="btn-group">
-                                <a href="{% url 'classe_show' classe.id %}" class="btn btn-sm btn-outline" title="Consulter">
+                            <div class="action-buttons">
+                                <a href="{% url 'classe_show' classe.id %}" class="action-btn action-btn-view" title="Consulter">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{% url 'classe_edit' classe.id %}" class="btn btn-sm btn-outline" title="Modifier">
+                                <a href="{% url 'classe_edit' classe.id %}" class="action-btn action-btn-edit" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button class="btn btn-sm btn-outline" onclick="openModal('deleteModal{{ classe.id }}')" title="Supprimer">
+                                <button class="action-btn action-btn-delete btn-delete" data-url="{% url 'classe_delete' classe.id %}" data-name="{{ classe.nom }} ({{ classe.niveau }})" title="Supprimer">
                                     <i class="bi bi-trash"></i>
                                 </button>
-                            </div>
-                            
-                            <!-- Delete Modal -->
-                            <div id="deleteModal{{ classe.id }}" class="modal">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5>Confirmer la suppression</h5>
-                                        <button class="btn" onclick="closeModal('deleteModal{{ classe.id }}')">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Êtes-vous sûr de vouloir supprimer la classe <strong>{{ classe.nom }} ({{ classe.niveau }})</strong> ?</p>
-                                        <p class="text-muted small">Cette action est irréversible.</p>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button class="btn btn-secondary" onclick="closeModal('deleteModal{{ classe.id }}')">Annuler</button>
-                                        <form method="post" action="{% url 'classe_delete' classe.id %}">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-danger">Supprimer</button>
-                                        </form>
-                                    </div>
-                                </div>
                             </div>
                         </td>
                     </tr>

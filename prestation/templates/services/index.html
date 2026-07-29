@@ -53,14 +53,14 @@
                         </td>
                         <td>{{ service.created_at|date:"d/m/Y" }}</td>
                         <td>
-                            <div class="btn-group">
-                                <a href="{% url 'service_show' service.id %}" class="btn btn-sm btn-outline" title="Consulter">
+                            <div class="action-buttons">
+                                <a href="{% url 'service_show' service.id %}" class="action-btn action-btn-view" title="Consulter">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{% url 'service_edit' service.id %}" class="btn btn-sm btn-outline" title="Modifier">
+                                <a href="{% url 'service_edit' service.id %}" class="action-btn action-btn-edit" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button class="btn btn-sm btn-outline btn-delete" data-url="{% url 'service_delete' service.id %}" data-name="{{ service.nom }}" title="Supprimer">
+                                <button class="action-btn action-btn-delete btn-delete" data-url="{% url 'service_delete' service.id %}" data-name="{{ service.nom }}" title="Supprimer">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>

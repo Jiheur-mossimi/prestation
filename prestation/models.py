@@ -301,6 +301,61 @@ class Mois(models.Model):
 
 
 # ==========================
+# SESSION DE PRESTATION
+# ==========================
+
+class SessionPrestation(models.Model):
+    STATUT_SESSION = (
+        ('EN_COURS', 'En cours'),
+        ('TERMINEE', 'Terminée'),
+    )
+
+    date = models.DateField(unique=True)
+    heure_ouverture = models.TimeField(null=True, blank=True)
+    heure_fermeture = models.TimeField(null=True, blank=True)
+    statut = models.CharField(
+        max_length=20,
+        choices=STATUT_SESSION,
+        default='EN_COURS'
+    )
+    ouvert_par = models.ForeignKey(
+        Utilisateur,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="sessions_ouvertes"
+    )
+    cloture_par = models.ForeignKey(
+        Utilisateur,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sessions_cloturees"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date']
+        verbose_name = 'Session de Prestation'
+        verbose_name_plural = 'Sessions de Prestation'
+        indexes = [
+            models.Index(fields=['date']),
+            models.Index(fields=['statut']),
+        ]
+
+    def __str__(self):
+        return f"Session du {self.date.strftime('%d/%m/%Y')} - {self.get_statut_display()}"
+
+    def nombre_agents_presents(self):
+        return self.prestations.filter(statut__in=['PRESENT', 'RETARD']).count()
+
+    def nombre_prestations_enseignants(self):
+        return self.prestations.aggregate(
+            total=models.Count('prestations_cours')
+        )['total'] or 0
+
+
+# ==========================
 # PRESTATION GENERALE
 # ==========================
 
@@ -319,6 +374,13 @@ class Prestation(models.Model):
         (STATUS_TERMINE, 'Terminé'),
     )
 
+    session = models.ForeignKey(
+        SessionPrestation,
+        on_delete=models.CASCADE,
+        related_name="prestations",
+        null=True,
+        blank=True
+    )
     agent = models.ForeignKey(
         Agent,
         on_delete=models.PROTECT,
@@ -597,10 +659,18 @@ def creer_utilisateur(sender, instance, created, **kwargs):
             last_name=f"{instance.nom} {instance.postnom}"
         )
 
+        # Mapper le type_agent vers un rôle Utilisateur valide
+        role_mapping = {
+            'ENSEIGNANT': 'ENSEIGNANT',
+            'ADMINISTRATIF': 'SECRETAIRE',
+            'DISCIPLINE': 'PREFET',
+        }
+        role = role_mapping.get(instance.type_agent, 'SECRETAIRE')
+
         Utilisateur.objects.create(
             user=user,
             agent=instance,
-            role=instance.type_agent,
+            role=role,
             must_change_password=True
         )
 

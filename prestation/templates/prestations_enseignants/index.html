@@ -71,11 +71,11 @@
                             <span class="badge badge-primary">{{ pe.duree_cours }}</span>
                         </td>
                         <td>
-                            <div class="btn-group">
-                                <a href="{% url 'prestation_enseignant_edit' pe.id %}" class="btn btn-sm btn-outline" title="Modifier">
+                            <div class="action-buttons">
+                                <a href="{% url 'prestation_enseignant_edit' pe.id %}" class="btn action-btn action-btn-edit" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button class="btn btn-sm btn-outline btn-delete" data-url="{% url 'prestation_enseignant_delete' pe.id %}" data-name="cette prestation enseignant" title="Supprimer">
+                                <button class="btn action-btn action-btn-delete btn-delete" data-url="{% url 'prestation_enseignant_delete' pe.id %}" data-name="cette prestation enseignant" title="Supprimer">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>

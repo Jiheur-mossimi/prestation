@@ -37,7 +37,7 @@
                     <button class="btn btn-primary" onclick="openModal('editProfileModal')">
                         <i class="bi bi-pencil me-2"></i>Modifier le profil
                     </button>
-                    <button class="btn btn-outline" onclick="openModal('passwordModal')">
+                    <button class="btn btn-outline" disabled>
                         <i class="bi bi-key me-2"></i>Changer le mot de passe
                     </button>
                     <button class="btn btn-outline" onclick="document.getElementById('photoInput').click()">
@@ -230,7 +230,7 @@
             </button>
         </div>
         <div class="modal-body">
-            <form method="post" action="{% url 'profile_update' %}">
+            <form method="post" action="{% url 'profile' %}">
                 {% csrf_token %}
                 <div class="form-group">
                     <label class="form-label">Email</label>
@@ -244,47 +244,15 @@
                     <label class="form-label">Adresse</label>
                     <textarea name="adresse" class="form-control" rows="2">{{ user.utilisateur.agent.adresse }}</textarea>
                 </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('editProfileModal')">Annuler</button>
-            <button type="submit" class="btn btn-primary">Enregistrer</button>
-        </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editProfileModal')">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
             </form>
+        </div>
     </div>
 </div>
 
-<!-- Change Password Modal -->
-<div id="passwordModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5>Changer le mot de passe</h5>
-            <button class="btn" onclick="closeModal('passwordModal')">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form method="post" action="{% url 'change_password' %}">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label class="form-label">Mot de passe actuel</label>
-                    <input type="password" name="old_password" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Nouveau mot de passe</label>
-                    <input type="password" name="new_password" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Confirmer le mot de passe</label>
-                    <input type="password" name="confirm_password" class="form-control" required>
-                </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('passwordModal')">Annuler</button>
-            <button type="submit" class="btn btn-primary">Changer</button>
-        </div>
-            </form>
-    </div>
-</div>
 <script>
 function uploadPhoto(input) {
     if (input.files && input.files[0]) {
@@ -292,7 +260,7 @@ function uploadPhoto(input) {
         formData.append('photo', input.files[0]);
         formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
         
-        fetch("{% url 'profile_update' %}", {
+        fetch("{% url 'profile' %}", {
             method: 'POST',
             body: formData
         })

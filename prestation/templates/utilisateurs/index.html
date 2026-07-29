@@ -42,7 +42,7 @@
                     <tr>
                         <td>
                             <div class="user-info">
-                                <img src="{% static 'images/default-avatar.png' %}" alt="" class="avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3E{{ utilisateur.user.username|first|upper }}%3C/text%3E%3C/svg%3E'">
+                                <img src="{% static 'images/default-avatar.svg' %}" alt="" class="avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3E{{ utilisateur.user.username|first|upper }}%3C/text%3E%3C/svg%3E'">
                                 <div>
                                     <div class="name">{{ utilisateur.user.username }}</div>
                                     <div class="email">{{ utilisateur.user.email }}</div>
@@ -64,8 +64,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline" title="Modifier">
+                            <div class="action-buttons">
+                                <button class="btn action-btn action-btn-edit" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline" title="Réinitialiser mot de passe">

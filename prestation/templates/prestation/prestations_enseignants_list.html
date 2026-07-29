@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Prestations Enseignants - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Prestations Enseignants{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Prestations Enseignants</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    {% for date, prestations in prestations_by_date.items %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="mb-1">{{ date|date:"d/m/Y" }}</h5>
+                        <p class="text-muted mb-0 small">{{ prestations|length }} cours</p>
+                    </div>
+                    <span class="badge badge-{% if date == today %}success{% else %}secondary{% endif %}">
+                        {{ date|date:"D" }}
+                    </span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm mb-3">
+                        <thead>
+                            <tr>
+                                <th>Cours</th>
+                                <th>Classe</th>
+                                <th>Horaire</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pe in prestations|slice:":3" %}
+                            <tr>
+                                <td>{{ pe.cours.libelle }}</td>
+                                <td>{{ pe.classe.nom }}</td>
+                                <td>
+                                    {{ pe.heure_debut|time:"H:i" }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <a href="#" class="btn btn-outline w-100">
+                    <i class="bi bi-eye me-2"></i>Voir détails
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-book" style="font-size: 3rem; color: var(--text-muted);"></i>
+                <p class="text-muted mt-3">Aucune prestation enseignant enregistrée</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

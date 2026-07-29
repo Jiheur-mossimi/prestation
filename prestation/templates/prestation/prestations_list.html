@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Prestations Générales - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Prestations Générales{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Prestations Générales</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    {% for session in sessions %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="mb-1">{{ session.date|date:"d/m/Y" }}</h5>
+                        <p class="text-muted mb-0 small">
+                            Ouverture: {{ session.heure_ouverture|time:"H:i" }}
+                            {% if session.heure_fermeture %}
+                            | Fermeture: {{ session.heure_fermeture|time:"H:i" }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <span class="badge badge-{% if session.statut == 'EN_COURS' %}success{% else %}secondary{% endif %}">
+                        {{ session.get_statut_display }}
+                    </span>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <small class="text-muted">Agents présents</small>
+                        <div class="fw-semibold">{{ session.nombre_agents_presents }}</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Total agents</small>
+                        <div class="fw-semibold">{{ session.prestations.count }}</div>
+                    </div>
+                </div>
+                
+                <a href="{% url 'session_detail' session.id %}" class="btn btn-outline w-100">
+                    <i class="bi bi-eye me-2"></i>Voir les prestations
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-calendar-x" style="font-size: 3rem; color: var(--text-muted);"></i>
+                <p class="text-muted mt-3">Aucune session de prestation enregistrée</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

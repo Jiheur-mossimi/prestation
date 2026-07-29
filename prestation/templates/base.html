@@ -1,4 +1,4 @@
-:{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -11,22 +11,19 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 </head>
 <body>
-    
     <!-- Sidebar Overlay (Mobile) -->
     <div class="sidebar-overlay"></div>
 
     {% if user.is_authenticated %}
     <div class="wrapper">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
-                <img src="{% static 'images/logo.png' %}" alt="Logo">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" onerror="this.style.display='none'">
                 <h4>Gestion Prestations</h4>
             </div>
             
@@ -126,33 +123,31 @@
             <!-- Navbar -->
             <nav class="navbar">
                 <div class="navbar-left">
-                    <button class="navbar-toggle">
+                    <button class="navbar-toggle-desktop" id="sidebarToggle" title="Afficher/masquer le menu">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <button class="navbar-toggle" id="mobileMenuToggle">
                         <i class="bi bi-list"></i>
                     </button>
                     <h5 class="mb-0">{% block page_title %}Tableau de bord{% endblock %}</h5>
                 </div>
                 
                 <div class="navbar-right">
-                    <button class="navbar-toggle" onclick="toggleSidebar()">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    
                     <div class="navbar-search">
                         <i class="bi bi-search"></i>
                         <input type="text" class="form-control" placeholder="Rechercher...">
                     </div>
                     
                     <div class="navbar-actions">
-                        <a href="{% url 'notifications' %}" class="navbar-action notification-badge" title="Notifications">
+                        <a href="{% url 'notifications' %}" class="navbar-action" title="Notifications">
                             <i class="bi bi-bell"></i>
-                            <span class="badge notification-badge">3</span>
                         </a>
                         
                         <a href="{% url 'messages' %}" class="navbar-action" title="Messages">
                             <i class="bi bi-chat-dots"></i>
                         </a>
                         
-                        <div class="navbar-user" id="userDropdown" data-toggle="dropdown">
+                        <div class="navbar-user" id="userDropdown">
                             {% if user.utilisateur.agent.photo %}
                                 <img src="{{ user.utilisateur.agent.photo.url }}" alt="{{ user.username }}">
                             {% else %}
@@ -219,8 +214,6 @@
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="{% static 'js/app.js' %}"></script>
     

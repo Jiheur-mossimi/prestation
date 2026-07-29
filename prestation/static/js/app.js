@@ -8,24 +8,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================
     // SIDEBAR TOGGLE
     // ============================
-    const sidebarToggle = document.querySelector('.navbar-toggle');
-    const sidebar = document.querySelector('.sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const mobileToggle = document.getElementById('mobileMenuToggle');
+    const sidebar = document.getElementById('sidebar');
     const mainContent = document.querySelector('.main-content');
     const overlay = document.querySelector('.sidebar-overlay');
 
     window.toggleSidebar = function() {
         if (sidebar) {
-            sidebar.classList.toggle('active');
-            
-            if (overlay) {
-                overlay.classList.toggle('active');
+            // On mobile, use 'active' class
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('active');
+                if (overlay) {
+                    overlay.classList.toggle('active');
+                }
+            } else {
+                // On desktop, toggle class on body
+                document.body.classList.toggle('sidebar-collapsed');
             }
         }
     };
 
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', function(event) {
-            event.stopPropagation();
+            event.preventDefault();
+            toggleSidebar();
+        });
+    }
+
+    if (mobileToggle) {
+        mobileToggle.addEventListener('click', function(event) {
+            event.preventDefault();
             toggleSidebar();
         });
     }
@@ -72,14 +85,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (userDropdown && userDropdownMenu) {
         userDropdown.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
             userDropdownMenu.classList.toggle('active');
         });
 
-        document.addEventListener('click', function() {
-            userDropdownMenu.classList.remove('active');
+        // Fermer le menu quand on clique ailleurs
+        document.addEventListener('click', function(e) {
+            if (!userDropdown.contains(e.target)) {
+                userDropdownMenu.classList.remove('active');
+            }
         });
 
+        // Empêcher la propagation depuis le menu
         userDropdownMenu.addEventListener('click', function(e) {
             e.stopPropagation();
         });
@@ -236,46 +254,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ============================
-    // PASSWORD TOGGLE
-    // ============================
-    const passwordToggles = document.querySelectorAll('.password-toggle');
-    passwordToggles.forEach(toggle => {
-        toggle.addEventListener('click', function() {
-            const passwordInput = this.closest('.input-group').querySelector('input[type="password"], input[type="text"]');
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            
-            // Change icon
-            const icon = this.querySelector('i');
-            if (type === 'text') {
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
-            } else {
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
-            }
-        });
-    });
-
-    // Global function for login page
-    window.togglePassword = function() {
-        const passwordInput = document.getElementById('passwordInput');
-        const passwordIcon = document.getElementById('passwordIcon');
-        
-        if (passwordInput && passwordIcon) {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            
-            if (type === 'text') {
-                passwordIcon.classList.remove('bi-eye');
-                passwordIcon.classList.add('bi-eye-slash');
-            } else {
-                passwordIcon.classList.remove('bi-eye-slash');
-                passwordIcon.classList.add('bi-eye');
-            }
-        }
-    };
 
     // ============================
     // FILE INPUT PREVIEW
@@ -358,40 +336,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ============================
-    // DATATABLES INITIALIZATION
-    // ============================
-    try {
-        const dataTables = document.querySelectorAll('.data-table, .datatable');
-        dataTables.forEach(table => {
-            // Skip if not a table element or hidden
-            if (table.tagName !== 'TABLE') return;
-            if (table.offsetWidth === 0 && table.offsetHeight === 0) return;
-            
-            if ($.fn.DataTable && !$.fn.DataTable.isDataTable(table)) {
-                $(table).DataTable({
-                    responsive: true,
-                    autoWidth: false,
-                    paging: true,
-                    searching: true,
-                    info: true,
-                    language: {
-                        search: "Rechercher:",
-                        lengthMenu: "Afficher _MENU_ éléments",
-                        info: "Affichage de _START_ à _END_ sur _TOTAL_ éléments",
-                        paginate: {
-                            first: "Premier",
-                            last: "Dernier",
-                            next: "Suivant",
-                            previous: "Précédent"
-                        }
-                    }
-                });
-            }
-        });
-    } catch(e) {
-        console.warn('DataTables initialization error:', e);
-    }
+    // DataTables désactivé pour éviter les erreurs
+    // Les tableaux s'affichent en HTML simple
 
     // ============================
     // APEXCHARTS INITIALIZATION

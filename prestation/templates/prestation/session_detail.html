@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Session {{ session.date|date:"d/m/Y" }} - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Prestations du {{ session.date|date:"d/m/Y" }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'sessions_list' %}">Sessions</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ session.date|date:"d/m/Y" }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">Prestations du {{ session.date|date:"d/m/Y" }}</h4>
+        <p class="text-muted mb-0">
+            Session {{ session.get_statut_display }}
+            - Ouverte à {{ session.heure_ouverture|time:"H:i" }}
+            {% if session.heure_fermeture %}
+            - Fermée à {{ session.heure_fermeture|time:"H:i" }}
+            {% endif %}
+        </p>
+    </div>
+    {% if session.statut == 'EN_COURS' and user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
+    <a href="{% url 'clore_session' session.id %}" class="btn btn-danger">
+        <i class="bi bi-stop-circle me-2"></i>Clôturer la session
+    </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>Présences Générales ({{ prestations|length }} agents)
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Agent</th>
+                                <th>Service</th>
+                                <th>Arrivée</th>
+                                <th>Départ</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prestation in prestations %}
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        {% if prestation.agent.photo %}
+                                        <img src="{{ prestation.agent.photo.url }}" alt="" class="avatar">
+                                        {% else %}
+                                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23374151'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20'%3E{{ prestation.agent.nom|first|upper }}%3C/text%3E%3C/svg%3E" alt="" class="avatar">
+                                        {% endif %}
+                                        <div class="name">{{ prestation.agent.nom_complet }}</div>
+                                    </div>
+                                </td>
+                                <td>{{ prestation.agent.service.nom }}</td>
+                                <td>{{ prestation.heure_arrivee|time:"H:i"|default:"-" }}</td>
+                                <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
+                                <td>
+                                    <span class="badge badge-{% if prestation.statut == 'PRESENT' %}success{% elif prestation.statut == 'RETARD' %}warning{% elif prestation.statut == 'ABSENT' %}danger{% else %}secondary{% endif %}">
+                                        {{ prestation.get_statut_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">Aucune prestation</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

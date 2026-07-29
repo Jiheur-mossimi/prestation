@@ -2,73 +2,78 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Dashboard
-    path('', views.login_view, name='login'),
-
-    # Connexion
-    path('logout/', views.logout_view, name='logout'),
+        # Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
     
-    # Agents
-    path('agents/', views.agents_index, name='agents'),
-    path('agents/create/', views.agent_create, name='agent_create'),
-    path('agents/edit/<int:id>/', views.agent_edit, name='agent_edit'),
-    path('agents/show/<int:id>/', views.agent_show, name='agent_show'),
-    path('agents/delete/<int:id>/', views.agent_delete, name='agent_delete'),
+    # Authentification
+    path('', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
     
-    # Services
-    path('services/', views.services_index, name='services'),
-    path('services/create/', views.service_create, name='service_create'),
-    path('services/show/<int:id>/', views.service_show, name='service_show'),
-    path('services/edit/<int:id>/', views.service_edit, name='service_edit'),
-    path('services/delete/<int:id>/', views.service_delete, name='service_delete'),
     
-    # Cours
-    path('cours/', views.cours_index, name='cours'),
-    path('cours/create/', views.cours_create, name='cours_create'),
-    path('cours/show/<int:id>/', views.cours_show, name='cours_show'),
-    path('cours/edit/<int:id>/', views.cours_edit, name='cours_edit'),
-    path('cours/delete/<int:id>/', views.cours_delete, name='cours_delete'),
+    # Sessions de prestation
+    path('sessions/', views.sessions_list, name='sessions_list'),
+    path('sessions/<int:session_id>/', views.session_detail, name='session_detail'),
+    path('sessions/ouvrir/', views.ouvrir_session, name='ouvrir_session'),
+    path('sessions/clore/<int:session_id>/', views.clore_session, name='clore_session'),
     
-    # Classes
-    path('classes/', views.classes_index, name='classes'),
-    path('classes/create/', views.classe_create, name='classe_create'),
-    path('classes/show/<int:id>/', views.classe_show, name='classe_show'),
-    path('classes/edit/<int:id>/', views.classe_edit, name='classe_edit'),
-    path('classes/delete/<int:id>/', views.classe_delete, name='classe_delete'),
+    # Pointage
+    path('pointage/arrivee/', views.pointer_arrivee, name='pointer_arrivee'),
+    path('pointage/depart/', views.pointer_depart, name='pointer_depart'),
+    path('pointage/', views.pointage, name='pointage'),
     
-    # Fonctions
-    path('fonctions/', views.fonctions_index, name='fonctions'),
-    path('fonctions/create/', views.fonction_create, name='fonction_create'),
-    path('fonctions/show/<int:id>/', views.fonction_show, name='fonction_show'),
-    path('fonctions/edit/<int:id>/', views.fonction_edit, name='fonction_edit'),
-    path('fonctions/delete/<int:id>/', views.fonction_delete, name='fonction_delete'),
+    # Prestations générales
+    path('prestations-generales/', views.prestations_list, name='prestations_list'),
     
-    # Mois
-    path('mois/', views.mois_index, name='mois'),
-    path('mois/create/', views.mois_create, name='mois_create'),
-    path('mois/show/<int:id>/', views.mois_show, name='mois_show'),
-    path('mois/edit/<int:id>/', views.mois_edit, name='mois_edit'),
-    path('mois/delete/<int:id>/', views.mois_delete, name='mois_delete'),
+    # Prestations enseignants
+    path('prestations-enseignants/', views.prestations_enseignants_list, name='prestations_enseignants_list'),
+    path('prestations-enseignants/creer/', views.prestation_enseignant_create, name='prestation_enseignant_create'),
     
-    # Rapports
-    path('rapports/', views.rapports_index, name='rapports'),
+    # API temps réel
+    path('api/dashboard-stats/', views.api_dashboard_stats, name='api_dashboard_stats'),
+    path('api/prestations-en-cours/', views.api_prestations_en_cours, name='api_prestations_en_cours'),
     
-    # Notifications
-    path('notifications/', views.notifications, name='notifications'),
+    # Entités existantes
+    path('agents/', views.agents_list, name='agents'),
+    path('agents/creer/', views.agent_create, name='agent_create'),
+    path('agents/<int:agent_id>/', views.agent_show, name='agent_show'),
+    path('agents/<int:agent_id>/modifier/', views.agent_edit, name='agent_edit'),
+    path('agents/<int:agent_id>/supprimer/', views.agent_delete, name='agent_delete'),
     
-    # Messages/Chat
-    path('messages/', views.messages_chat, name='messages'),
+    path('services/', views.services_list, name='services'),
+    path('services/creer/', views.service_create, name='service_create'),
+    path('services/<int:service_id>/', views.service_show, name='service_show'),
+    path('services/<int:service_id>/modifier/', views.service_edit, name='service_edit'),
+    path('services/<int:service_id>/supprimer/', views.service_delete, name='service_delete'),
     
-    # Utilisateurs
-    path('utilisateurs/', views.utilisateurs_index, name='utilisateurs'),
+    path('classes/', views.classes_list, name='classes'),
+    path('classes/creer/', views.classe_create, name='classe_create'),
+    path('classes/<int:classe_id>/', views.classe_show, name='classe_show'),
+    path('classes/<int:classe_id>/modifier/', views.classe_edit, name='classe_edit'),
+    path('classes/<int:classe_id>/supprimer/', views.classe_delete, name='classe_delete'),
     
-    # Paramètres
-    path('parametres/', views.parametres_index, name='parametres'),
+    path('cours/', views.cours_list, name='cours'),
+    path('cours/creer/', views.cours_create, name='cours_create'),
+    path('cours/<int:cours_id>/', views.cours_show, name='cours_show'),
+    path('cours/<int:cours_id>/modifier/', views.cours_edit, name='cours_edit'),
+    path('cours/<int:cours_id>/supprimer/', views.cours_delete, name='cours_delete'),
     
-    # Profile
-    path('profile/', views.profile, name='profile'),
-    path('profile/update/', views.profile_update, name='profile_update'),
-    path('profile/change-password/', views.change_password, name='change_password'),
+    path('fonctions/', views.fonctions_list, name='fonctions'),
+    path('fonctions/creer/', views.fonction_create, name='fonction_create'),
+    path('fonctions/<int:fonction_id>/', views.fonction_show, name='fonction_show'),
+    path('fonctions/<int:fonction_id>/modifier/', views.fonction_edit, name='fonction_edit'),
+    path('fonctions/<int:fonction_id>/supprimer/', views.fonction_delete, name='fonction_delete'),
     
+    path('mois/', views.mois_list, name='mois'),
+    path('mois/creer/', views.mois_create, name='mois_create'),
+    path('mois/<int:mois_id>/', views.mois_show, name='mois_show'),
+    path('mois/<int:mois_id>/modifier/', views.mois_edit, name='mois_edit'),
+    path('mois/<int:mois_id>/supprimer/', views.mois_delete, name='mois_delete'),
+    
+    path('utilisateurs/', views.utilisateurs_list, name='utilisateurs'),
+    
+    path('messages/', views.messages_view, name='messages'),
+    path('notifications/', views.notifications_view, name='notifications'),
+    path('rapports/', views.rapports_view, name='rapports'),
+    path('parametres/', views.parametres_view, name='parametres'),
+    path('profile/', views.profile_view, name='profile'),
 ]

@@ -18,6 +18,32 @@
             </a>
         </li>
         
+        <li class="menu-header">Prestations</li>
+        <li>
+            <a href="{% url 'pointage' %}" class="{% if 'pointage' in request.path %}active{% endif %}">
+                <i class="bi bi-clock"></i>
+                <span>Mon Pointage</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'sessions_list' %}" class="{% if 'sessions' in request.path %}active{% endif %}">
+                <i class="bi bi-calendar-check"></i>
+                <span>Session Prestation</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'prestations_list' %}" class="{% if 'prestations-generales' in request.path %}active{% endif %}">
+                <i class="bi bi-people"></i>
+                <span>Prestations Générales</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'prestations_enseignants_list' %}" class="{% if 'prestations-enseignants' in request.path %}active{% endif %}">
+                <i class="bi bi-book"></i>
+                <span>Prestations Enseignants</span>
+            </a>
+        </li>
+        
         <li class="menu-header">Gestion</li>
         <li>
             <a href="{% url 'agents' %}" class="{% if 'agents' in request.path %}active{% endif %}">

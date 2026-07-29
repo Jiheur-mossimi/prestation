@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pointage - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Mon Pointage{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Pointage</li>
+{% endblock %}
+
+{% block content %}
+{% if session_active %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <!-- Pointage Arrivée -->
+        {% if not peut_pointer_arrivee %}
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-clock" style="font-size: 3rem; color: var(--text-muted);"></i>
+                </div>
+                <h4>En attente de pointage</h4>
+                <p class="text-muted">Veuillez pointer votre arrivée pour commencer la journée</p>
+                <button id="btnArrivee" class="btn btn-success btn-lg w-100">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Pointer mon arrivée
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Pointage Départ -->
+        {% if peut_pointer_depart %}
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-check-circle" style="font-size: 3rem; color: var(--success-color);"></i>
+                </div>
+                <h4>Arrivée enregistrée</h4>
+                <p class="text-muted">
+                    Vous avez pointé à {{ heure_arrivee }}
+                </p>
+                <button id="btnDepart" class="btn btn-warning btn-lg w-100">
+                    <i class="bi bi-box-arrow-right me-2"></i>Pointer mon départ
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Prestation terminée -->
+        {% if prestation_terminee %}
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-check-circle" style="font-size: 3rem; color: var(--success-color);"></i>
+                </div>
+                <h4>Prestation terminée</h4>
+                <p class="text-muted">
+                    Arrivée: {{ heure_arrivee }}<br>
+                    Départ: {{ heure_depart }}<br>
+                    Durée: {{ duree }}
+                </p>
+                <span class="badge badge-success">{{ statut }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Message si pas de session -->
+{% else %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-calendar-x" style="font-size: 4rem; color: var(--text-muted);"></i>
+                <h4 class="mt-3">Aucune session ouverte</h4>
+                <p class="text-muted">
+                    La session de prestation n'a pas encore été ouverte.<br>
+                    Veuillez contacter un administrateur ou un secrétaire.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnArrivee = document.getElementById('btnArrivee');
+    const btnDepart = document.getElementById('btnDepart');
+    
+    if (btnArrivee) {
+        btnArrivee.addEventListener('click', function() {
+            fetch("{% url 'pointer_arrivee' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+    }
+    
+    if (btnDepart) {
+        btnDepart.addEventListener('click', function() {
+            if (confirm('Êtes-vous sûr de vouloir pointer votre départ ?')) {
+                fetch("{% url 'pointer_depart' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

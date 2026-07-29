@@ -1,107 +1,117 @@
-{% extends 'base.html' %}
 {% load static %}
-
-{% block title %}Connexion - Gestion des Prestations{% endblock %}
-
-{% block auth_content %}
-<div class="login-page">
-    <div class="login-container fade-in">
-        <!-- Illustration -->
-        <div class="login-illustration">
-            <img src="{% static 'images/login-illustration.svg' %}" alt="Illustration" onerror="this.style.display='none'">
-            <div id="illustration-placeholder" style="display: none; font-size: 8rem; margin-bottom: 2rem;">
-                <i class="bi bi-building"></i>
-            </div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Gestion des Prestations</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(-45deg, #0f172a, #1e3a8a, #172554, #1e40af); background-size: 400% 400%; animation: gradientShift 20s ease infinite; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .login-card { background: #fff; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.3); max-width: 1000px; width: 100%; display: flex; }
+        .login-banner { flex: 1; background: linear-gradient(135deg, #1e3a8a, #3b82f6); padding: 3rem; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff; text-align: center; }
+        .login-banner-icon { font-size: 5rem; margin-bottom: 1.5rem; opacity: 0.9; }
+        .login-banner h3 { font-weight: 700; margin-bottom: 0.75rem; }
+        .login-banner p { opacity: 0.8; line-height: 1.6; }
+        .login-form-section { flex: 1; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; max-width: 450px; margin: 0 auto; width: 100%; }
+        .login-form-section h2 { font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; }
+        .login-form-section .subtitle { color: #64748b; margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { font-weight: 600; color: #1e293b; margin-bottom: 0.5rem; font-size: 0.875rem; }
+        .form-control { padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9375rem; }
+        .form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .btn-login { width: 100%; padding: 0.75rem; font-weight: 600; border-radius: 0.5rem; background: #3b82f6; color: #fff; border: none; font-size: 1rem; }
+        .btn-login:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
+        .alert { padding: 0.875rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; border-left: 4px solid; }
+        .alert-success { background: #d1fae5; color: #065f46; border-color: #10b981; }
+        .alert-error, .alert-danger { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
+        .password-field { position: relative; display: flex; align-items: center; }
+        .password-field .form-control { padding-right: 3rem; }
+        .password-toggle { position: absolute; right: 0.75rem; background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0.5rem; }
+        .password-toggle:hover { color: #3b82f6; }
+        .login-footer { text-align: center; margin-top: 1.5rem; color: #94a3b8; font-size: 0.8125rem; }
+        @media (max-width: 768px) { .login-card { flex-direction: column; } .login-banner { padding: 2rem; } }
+    </style>
+</head>
+<body>
+    <div class="login-card fade-in">
+        <!-- Illustration Banner -->
+        <div class="login-banner">
+            <div class="login-banner-icon"><i class="bi bi-building"></i></div>
             <h3>Gestion des Prestations</h3>
-            <p>Interface complète de gestion des agents et prestations pour établissements scolaires</p>
+            <p>Interface complète de gestion des agents et des prestations pour établissements scolaires</p>
         </div>
         
         <!-- Login Form -->
-        <div class="login-form-wrapper">
-        <div class="login-header">
-            <div class="login-logo">
-                <img src="{% static 'images/logo.png' %}" alt="Logo" onerror="this.style.display='none'">
-                <div id="logo-placeholder" style="display: none; font-size: 3rem; color: var(--primary-color); margin-bottom: 0.75rem;">
-                    <i class="bi bi-building"></i>
-                </div>
-            </div>
+        <div class="login-form-section">
             <h2>Bienvenue</h2>
-            <p>Connectez-vous à votre espace</p>
-        </div>
+            <p class="subtitle">Connectez-vous à votre espace</p>
             
-            <form method="post" class="login-form" novalidate>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-{% if message.tags == 'success' %}check-circle{% else %}exclamation-triangle{% endif %}"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="margin-left: auto; background: none; border: none; font-size: 1.25rem; cursor: pointer;"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <form method="post" novalidate>
                 {% csrf_token %}
-                
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-                
                 <div class="form-group">
-                    <label class="form-label">Nom d'utilisateur</label>
-                    <input type="text" 
-                           name="username" 
-                           class="form-control" 
-                           placeholder="votre nom d'utilisateur" 
-                           required
-                           autofocus>
-                    {% if form.username.errors %}
-                        <div class="text-danger mt-1">
-                            {{ form.username.errors }}
-                        </div>
-                    {% endif %}
+                    <label for="username">Nom d'utilisateur</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="admin" required autofocus>
                 </div>
-                
                 <div class="form-group">
-                    <label class="form-label">Mot de passe</label>
+                    <label for="password">Mot de passe</label>
                     <div class="password-field">
-                        <input type="password" 
-                               id="passwordInput"
-                               name="password" 
-                               class="form-control" 
-                               placeholder="••••••••" 
-                               required>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
                         <button type="button" class="password-toggle" onclick="togglePassword()">
                             <i id="passwordIcon" class="bi bi-eye"></i>
                         </button>
                     </div>
-                    {% if form.password.errors %}
-                        <div class="text-danger mt-1">
-                            {{ form.password.errors }}
-                        </div>
-                    {% endif %}
                 </div>
-                
-                <div class="form-group login-options">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="remember" id="remember">
-                        <label class="form-check-label" for="remember">
-                            Se souvenir de moi
-                        </label>
-                    </div>
-                    <a href="#" class="forgot-password">
-                        <i class="bi bi-question-circle me-1"></i>Mot de passe oublié ?
-                    </a>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-lg">
+                <button type="submit" class="btn-login">
                     <i class="bi bi-box-arrow-in-right me-2"></i>Connexion
                 </button>
             </form>
             
             <div class="login-footer">
-                <p class="mb-2">
-                    <small>© 2024 Gestion des Prestations. Tous droits réservés.</small>
-                </p>
-                <p class="mb-0">
-                    <small>Version 1.0 - Établissement Scolaire</small>
-                </p>
+                <p class="mb-1"><small>© 2024 Gestion des Prestations. Tous droits réservés.</small></p>
+                <p class="mb-0"><small>Version 1.0 — Établissement Scolaire</small></p>
+                <p class="mt-2"><small class="text-muted">Démo : admin / admin123</small></p>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function togglePassword() {
+            const pwd = document.getElementById('password');
+            const icon = document.getElementById('passwordIcon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                pwd.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+        // Auto-dismiss alerts after 5s
+        document.querySelectorAll('.alert').forEach(alert => {
+            setTimeout(() => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
