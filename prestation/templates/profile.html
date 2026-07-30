@@ -34,16 +34,12 @@
                 </div>
                 
                 <div class="d-grid gap-2">
-                    <button class="btn btn-primary" onclick="openModal('editProfileModal')">
-                        <i class="bi bi-pencil me-2"></i>Modifier le profil
-                    </button>
-                    <button class="btn btn-outline" disabled>
+                    <a href="{% url 'modifier_mes_infos' %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-2"></i>Modifier mes informations
+                    </a>
+                    <a href="{% url 'changer_mot_de_passe' %}" class="btn btn-outline">
                         <i class="bi bi-key me-2"></i>Changer le mot de passe
-                    </button>
-                    <button class="btn btn-outline" onclick="document.getElementById('photoInput').click()">
-                        <i class="bi bi-camera me-2"></i>Changer la photo
-                    </button>
-                    <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="uploadPhoto(this)">
+                    </a>
                 </div>
             </div>
         </div>

@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ utilisateur.user.username }} - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Détails de l'Utilisateur{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'utilisateurs' %}">Utilisateurs</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ utilisateur.user.username }}</li>
+{% endblock %}
+
+{% block content %}
+<!-- Header avec boutons Modifier, Réinitialiser et Retour -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-person-gear me-2 text-primary"></i>{{ utilisateur.user.username }}
+        </h5>
+        <div class="btn-group">
+            <a href="{% url 'utilisateur_edit' utilisateur.id %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Modifier
+            </a>
+            <a href="{% url 'utilisateur_reset_password' utilisateur.id %}" class="btn btn-warning btn-sm">
+                <i class="bi bi-key me-1"></i>Mot de passe
+            </a>
+            <a href="{% url 'utilisateurs' %}" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Retour
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Profile Card -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px; font-size: 4rem; font-weight: 600;">
+                    {{ utilisateur.user.username|first|upper }}
+                </div>
+                
+                <h4 class="mb-1">{{ utilisateur.user.username }}</h4>
+                <p class="text-muted mb-3">{{ utilisateur.get_role_display }}</p>
+                
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    {% if utilisateur.must_change_password %}
+                    <span class="badge badge-warning">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Mot de passe à changer
+                    </span>
+                    {% else %}
+                    <span class="badge badge-success">
+                        <i class="bi bi-check-circle me-1"></i>Actif
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Info -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations Rapides</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Nom d'utilisateur</span>
+                    <strong><code>{{ utilisateur.user.username }}</code></strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Email</span>
+                    <strong>{{ utilisateur.user.email }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Agent lié</span>
+                    <strong>{{ utilisateur.agent.nom_complet }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Dernière connexion</span>
+                    <strong>{{ utilisateur.user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Date de création</span>
+                    <strong>{{ utilisateur.user.date_joined|date:"d/m/Y H:i" }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">Rôle</span>
+                    <strong>
+                        <span class="badge badge-{% if utilisateur.role == 'ADMIN' %}danger{% elif utilisateur.role == 'SECRETAIRE' %}info{% elif utilisateur.role == 'ENSEIGNANT' %}success{% elif utilisateur.role == 'PREFET' %}warning{% else %}secondary{% endif %}">
+                            {{ utilisateur.get_role_display }}
+                        </span>
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details -->
+    <div class="col-lg-8">
+        <!-- Security Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-lock me-2"></i>Sécurité et Mot de passe
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Statut du mot de passe</label>
+                        <p class="mb-0 fw-semibold">
+                            {% if utilisateur.must_change_password %}
+                                <span class="badge badge-warning">Doit changer son mot de passe</span>
+                            {% else %}
+                                <span class="badge badge-success">Mot de passe à jour</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Dernière connexion</label>
+                        <p class="mb-0 fw-semibold">{{ utilisateur.user.last_login|date:"d/m/Y H:i"|default:"Jamais connecté" }}</p>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="text-muted small">Mot de passe temporaire</label>
+                        {% if utilisateur.mot_de_passe_temporaire %}
+                            <div class="alert alert-warning mb-0">
+                                <i class="bi bi-key me-2"></i>
+                                <strong>{{ utilisateur.mot_de_passe_temporaire }}</strong>
+                                <br>
+                                <small class="text-muted">Ce mot de passe est visible uniquement par l'administrateur. L'utilisateur doit le changer à sa prochaine connexion.</small>
+                            </div>
+                        {% else %}
+                            <p class="mb-0 text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Aucun mot de passe temporaire. L'utilisateur a déjà changé son mot de passe ou il n'a pas été réinitialisé.
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agent Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person me-2"></i>Agent Associé
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Nom complet</label>
+                        <p class="mb-0 fw-semibold">{{ utilisateur.agent.nom_complet }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Matricule</label>
+                        <p class="mb-0 fw-semibold"><code>{{ utilisateur.agent.matricule }}</code></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Service</label>
+                        <p class="mb-0 fw-semibold">{{ utilisateur.agent.service.nom }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Type d'agent</label>
+                        <p class="mb-0 fw-semibold">{{ utilisateur.agent.get_type_agent_display }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Email</label>
+                        <p class="mb-0 fw-semibold">{{ utilisateur.agent.email }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Téléphone</label>
+                        <p class="mb-0 fw-semibold">{{ utilisateur.agent.telephone }}</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'agent_show' utilisateur.agent.id %}" class="btn btn-outline">
+                        <i class="bi bi-eye me-2"></i>Voir le profil de l'agent
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card border-danger">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0 text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Zone de danger
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    La suppression d'un utilisateur est irréversible. Le compte Django associé sera également supprimé.
+                </p>
+                <button class="btn btn-danger btn-delete" data-url="{% url 'utilisateur_delete' utilisateur.id %}" data-name="{{ utilisateur.user.username }}">
+                    <i class="bi bi-trash me-2"></i>Supprimer cet utilisateur
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nouvel Utilisateur - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Nouvel Utilisateur{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'utilisateurs' %}">Utilisateurs</a></li>
+<li class="breadcrumb-item active" aria-current="page">Nouvel Utilisateur</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <i class="bi bi-person-plus me-2"></i>
+                    Créer un nouvel utilisateur
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Sélection de l'agent -->
+                    <div class="form-group">
+                        <label class="form-label">Agent <span class="required">*</span></label>
+                        <select name="agent" class="form-select" required>
+                            <option value="">Sélectionner un agent sans compte</option>
+                            {% for agent in agents_sans_user %}
+                            <option value="{{ agent.id }}">{{ agent.nom_complet }} ({{ agent.matricule }}) - {{ agent.service.nom }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">Seuls les agents actifs sans compte utilisateur sont affichés.</small>
+                    </div>
+
+                    <!-- Nom d'utilisateur -->
+                    <div class="form-group">
+                        <label class="form-label">Nom d'utilisateur <span class="required">*</span></label>
+                        <input type="text" name="username" class="form-control" required placeholder="Ex: jdupont" style="text-transform: lowercase;">
+                        <small class="form-text text-muted">Le nom d'utilisateur sera converti en minuscules.</small>
+                    </div>
+
+                    <!-- Rôle -->
+                    <div class="form-group">
+                        <label class="form-label">Rôle <span class="required">*</span></label>
+                        <select name="role" class="form-select" required>
+                            <option value="">Sélectionner un rôle</option>
+                            {% for value, label in role_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">
+                            <strong>Administrateur :</strong> Accès complet à toutes les fonctionnalités.<br>
+                            <strong>Secrétaire :</strong> Gestion des agents, sessions, prestations.<br>
+                            <strong>Enseignant :</strong> Pointage et déclaration de prestations enseignants.<br>
+                            <strong>Préfet de discipline :</strong> Gestion de la discipline.<br>
+                            <strong>Surveillant :</strong> Surveillance et pointage.
+                        </small>
+                    </div>
+
+                    <!-- Mot de passe (optionnel) -->
+                    <div class="form-group">
+                        <label class="form-label">Mot de passe</label>
+                        <input type="text" name="password" class="form-control" placeholder="Laisser vide pour générer automatiquement">
+                        <small class="form-text text-muted">Si laissé vide, un mot de passe temporaire sera généré automatiquement. L'utilisateur devra le changer à sa première connexion.</small>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="card-footer bg-transparent border-top mt-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'utilisateurs' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Créer l'utilisateur
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

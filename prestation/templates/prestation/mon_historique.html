@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon Historique - Gestion des Prestations{% endblock %}
+
+{% block page_title %}<i class="bi bi-clock-history me-2"></i>Mon Historique des Prestations{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door"></i> Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Mon Historique</li>
+{% endblock %}
+
+{% block content %}
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-funnel me-2 text-primary"></i>Filtrer par période</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="date" class="form-label">Date exacte</label>
+                <input type="date" class="form-control" id="date" name="date" value="{{ date_filter }}">
+            </div>
+            <div class="col-md-3">
+                <label for="mois" class="form-label">Mois</label>
+                <select class="form-select" id="mois" name="mois">
+                    <option value="">-- Mois --</option>
+                    {% for mois_num, mois_nom in mois_choices %}
+                    <option value="{{ mois_num }}" {% if mois_filter == mois_num|stringformat:'s' %}selected{% endif %}>{{ mois_nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="annee" class="form-label">Année</label>
+                <select class="form-select" id="annee" name="annee">
+                    <option value="">-- Année --</option>
+                    {% for annee in annees_list %}
+                    <option value="{{ annee }}" {% if annee_filter == annee|stringformat:'s' %}selected{% endif %}>{{ annee }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-2"></i>Filtrer
+                </button>
+            </div>
+            {% if date_filter or mois_filter or annee_filter %}
+            <div class="col-md-3 d-flex align-items-end">
+                <a href="{% url 'mon_historique' %}" class="btn btn-outline w-100">
+                    <i class="bi bi-x-circle me-2"></i>Réinitialiser
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Row 1: Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card stat-card-small primary">
+            <div class="stat-icon-sm"><i class="bi bi-people"></i></div>
+            <div class="stat-info-sm">
+                <h3>{{ stats.total_prestations }}</h3>
+                <h6>Total Prestations</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-small success">
+            <div class="stat-icon-sm"><i class="bi bi-person-check"></i></div>
+            <div class="stat-info-sm">
+                <h3>{{ stats.agents_presents }}</h3>
+                <h6>Présents</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-small warning">
+            <div class="stat-icon-sm"><i class="bi bi-clock"></i></div>
+            <div class="stat-info-sm">
+                <h3>{{ stats.agents_retard }}</h3>
+                <h6>Retards</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-small danger">
+            <div class="stat-icon-sm"><i class="bi bi-person-x"></i></div>
+            <div class="stat-info-sm">
+                <h3>{{ stats.agents_absents }}</h3>
+                <h6>Absences</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-table me-2 text-primary"></i>Historique de mes prestations</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Arrivée</th>
+                        <th>Départ</th>
+                        <th>Durée</th>
+                        <th>Service</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestation in prestations %}
+                    <tr>
+                        <td>{{ prestation.date|date:"d/m/Y" }}</td>
+                        <td>{{ prestation.heure_arrivee|time:"H:i"|default:"-" }}</td>
+                        <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
+                        <td>{{ prestation.duree_prestation|default:"-" }}</td>
+                        <td>{{ prestation.agent.service.nom }}</td>
+                        <td>
+                            <span class="badge badge-{% if prestation.statut == 'PRESENT' %}success{% elif prestation.statut == 'RETARD' %}warning{% elif prestation.statut == 'ABSENT' %}danger{% else %}secondary{% endif %}">
+                                {{ prestation.get_statut_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Aucune prestation enregistrée</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

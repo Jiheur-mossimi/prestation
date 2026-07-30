@@ -70,10 +70,18 @@ urlpatterns = [
     path('mois/<int:mois_id>/supprimer/', views.mois_delete, name='mois_delete'),
     
     path('utilisateurs/', views.utilisateurs_list, name='utilisateurs'),
+    path('utilisateurs/creer/', views.utilisateur_create, name='utilisateur_create'),
+    path('utilisateurs/<int:utilisateur_id>/', views.utilisateur_show, name='utilisateur_show'),
+    path('utilisateurs/<int:utilisateur_id>/modifier/', views.utilisateur_edit, name='utilisateur_edit'),
+    path('utilisateurs/<int:utilisateur_id>/reset-password/', views.utilisateur_reset_password, name='utilisateur_reset_password'),
+    path('utilisateurs/<int:utilisateur_id>/supprimer/', views.utilisateur_delete, name='utilisateur_delete'),
     
     path('messages/', views.messages_view, name='messages'),
     path('notifications/', views.notifications_view, name='notifications'),
     path('rapports/', views.rapports_view, name='rapports'),
     path('parametres/', views.parametres_view, name='parametres'),
     path('profile/', views.profile_view, name='profile'),
+    path('mon-historique/', views.mon_historique, name='mon_historique'),
+    path('changer-mot-de-passe/', views.changer_mot_de_passe, name='changer_mot_de_passe'),
+    path('modifier-mes-infos/', views.modifier_mes_infos, name='modifier_mes_infos'),
 ]

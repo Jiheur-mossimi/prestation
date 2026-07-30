@@ -3,7 +3,7 @@
 
 {% block title %}Tableau de bord - Gestion des Prestations{% endblock %}
 
-{% block page_title %}<i class="bi bi-speedometer2 me-2"></i>Tableau de Bord{% endblock %}
+{% block page_title %}Tableau de Bord{% if user.utilisateur.role not in 'ADMIN,SECRETAIRE' %} - {{ user.utilisateur.get_role_display }}{% endif %}{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door"></i> Accueil</a></li>
@@ -11,6 +11,9 @@
 {% endblock %}
 
 {% block content %}
+{% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
+<!-- ====== VUE ADMIN/SECRETAIRE ====== -->
+
 <!-- Row 1: 4 Stats Cards -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
@@ -112,23 +115,17 @@
                     </div>
                 </div>
                 <div class="session-premium-actions">
-                    {% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
-                        {% if stats.session_ouverte %}
-                        <a href="{% url 'clore_session' session_today.id %}" class="btn-session-action btn-session-close-action">
-                            <i class="bi bi-stop-circle"></i> Clôturer
-                        </a>
-                        <a href="{% url 'sessions_list' %}" class="btn-session-action btn-session-view-action">
-                            <i class="bi bi-eye"></i> Détails
-                        </a>
-                        {% else %}
-                        <a href="{% url 'ouvrir_session' %}" class="btn-session-action btn-session-start-action w-100">
-                            <i class="bi bi-play-circle"></i> Démarrer
-                        </a>
-                        {% endif %}
+                    {% if stats.session_ouverte %}
+                    <a href="{% url 'clore_session' session_today.id %}" class="btn-session-action btn-session-close-action">
+                        <i class="bi bi-stop-circle"></i> Clôturer
+                    </a>
+                    <a href="{% url 'sessions_list' %}" class="btn-session-action btn-session-view-action">
+                        <i class="bi bi-eye"></i> Détails
+                    </a>
                     {% else %}
-                        <a href="{% url 'pointage' %}" class="btn-session-action btn-session-start-action w-100">
-                            <i class="bi bi-clock"></i> Mon Pointage
-                        </a>
+                    <a href="{% url 'ouvrir_session' %}" class="btn-session-action btn-session-start-action w-100">
+                        <i class="bi bi-play-circle"></i> Démarrer
+                    </a>
                     {% endif %}
                 </div>
             </div>
@@ -160,30 +157,32 @@
 
 <!-- Row 3: Charts -->
 <div class="row g-3 mb-4">
-    <div class="col-md-7">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-graph-up me-2 text-primary"></i>Évolution des Prestations</h5>
             </div>
             <div class="card-body">
-                <div id="lineChart" style="height: 280px;"></div>
+                <div id="lineChart" style="height: 300px;"></div>
             </div>
         </div>
     </div>
-    <div class="col-md-5">
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-pie-chart me-2 text-info"></i>Répartition</h5>
             </div>
             <div class="card-body">
-                <div id="donutChart" style="height: 280px;"></div>
+                <div id="donutChart" style="height: 300px;"></div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Row 4: Tables -->
-<div class="row g-3">
+<div class="row g-3 mb-4">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -281,21 +280,167 @@
         </div>
     </div>
 </div>
+
+{% else %}
+<!-- ====== VUE AGENT / ENSEIGNANT ====== -->
+
+<!-- Row 1: Stats Cards personnelles -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <a href="{% url 'mon_historique' %}" class="text-decoration-none">
+            <div class="stat-card stat-card-small primary">
+                <div class="stat-icon-sm"><i class="bi bi-people"></i></div>
+                <div class="stat-info-sm">
+                    <h3>{{ stats.total_prestations }}</h3>
+                    <h6>Total Prestations</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{% url 'mon_historique' %}" class="text-decoration-none">
+            <div class="stat-card stat-card-small success">
+                <div class="stat-icon-sm"><i class="bi bi-person-check"></i></div>
+                <div class="stat-info-sm">
+                    <h3>{{ stats.agents_presents }}</h3>
+                    <h6>Présences</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{% url 'mon_historique' %}" class="text-decoration-none">
+            <div class="stat-card stat-card-small warning">
+                <div class="stat-icon-sm"><i class="bi bi-clock"></i></div>
+                <div class="stat-info-sm">
+                    <h3>{{ stats.agents_retard }}</h3>
+                    <h6>Retards</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{% url 'mon_historique' %}" class="text-decoration-none">
+            <div class="stat-card stat-card-small danger">
+                <div class="stat-icon-sm"><i class="bi bi-person-x"></i></div>
+                <div class="stat-info-sm">
+                    <h3>{{ stats.agents_absents }}</h3>
+                    <h6>Absences</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Row 2: Mon historique de prestations -->
+<div class="row g-3 mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Mon Historique</h5>
+                <a href="{% url 'mon_historique' %}" class="btn btn-sm btn-outline">Voir tout</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Arrivée</th>
+                                <th>Départ</th>
+                                <th>Durée</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prestation in prestations_recentes %}
+                            <tr>
+                                <td>{{ prestation.date|date:"d/m/Y" }}</td>
+                                <td>{{ prestation.heure_arrivee|time:"H:i"|default:"-" }}</td>
+                                <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
+                                <td>{{ prestation.duree_prestation|default:"-" }}</td>
+                                <td>
+                                    <span class="badge badge-{% if prestation.statut == 'PRESENT' %}success{% elif prestation.statut == 'RETARD' %}warning{% elif prestation.statut == 'ABSENT' %}danger{% else %}secondary{% endif %}">
+                                        {{ prestation.get_statut_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">Aucune prestation</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.utilisateur.role == 'ENSEIGNANT' %}
+<!-- Row 3: Prestations Enseignants (pour Enseignant uniquement) -->
+<div class="row g-3 mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-book me-2 text-warning"></i>Mes Prestations Enseignants</h5>
+                <a href="{% url 'prestations_enseignants_list' %}" class="btn btn-sm btn-outline">Voir tout</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Cours</th>
+                                <th>Classe</th>
+                                <th>Horaire</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pe in prestations_enseignants_recentes %}
+                            <tr>
+                                <td>{{ pe.prestation.date|date:"d/m/Y" }}</td>
+                                <td>{{ pe.cours.libelle }}</td>
+                                <td>{{ pe.classe.nom }}</td>
+                                <td>
+                                    <span class="badge badge-info">{{ pe.heure_debut|time:"H:i" }} - {{ pe.heure_fin|time:"H:i" }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">Aucune prestation enseignant</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
+{% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const lineEl = document.querySelector('#lineChart');
     if (lineEl && typeof ApexCharts !== 'undefined') {
+        const evolutionLabels = JSON.parse(document.getElementById('evolution-labels').textContent);
+        const evolutionData = JSON.parse(document.getElementById('evolution-data').textContent);
         new ApexCharts(lineEl, {
-            series: [{ name: 'Prestations', data: [30, 40, 35, 50, 49, 60, 70, 91, 125] }],
+            series: [{ name: 'Prestations', data: evolutionData }],
             chart: { type: 'area', height: 280, toolbar: { show: false }, zoom: { enabled: false } },
             colors: ['#3b82f6'],
             fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
             dataLabels: { enabled: false },
-            xaxis: { categories: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep'] },
+            xaxis: { categories: evolutionLabels },
             stroke: { curve: 'smooth', width: 2 },
             grid: { borderColor: '#e2e8f0', strokeDashArray: 4 },
             tooltip: { theme: 'dark' }
@@ -303,23 +448,57 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     const donutEl = document.querySelector('#donutChart');
     if (donutEl && typeof ApexCharts !== 'undefined') {
-        const dashboardStats = {
-            agents_presents: Number("{{ stats.agents_presents|default_if_none:'0' }}"),
-            agents_retard: Number("{{ stats.agents_retard|default_if_none:'0' }}"),
-            agents_absents: Number("{{ stats.agents_absents|default_if_none:'0' }}"),
-            prestations_enseignants: Number("{{ stats.prestations_enseignants|default_if_none:'0' }}")
-        };
+        const repartitionData = JSON.parse(document.getElementById('repartition-data').textContent);
+        const repartitionColors = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'];
+        const repartitionLabels = ['Présents', 'Retards', 'Absents', 'Enseignants'];
         new ApexCharts(donutEl, {
-            series: [dashboardStats.agents_presents, dashboardStats.agents_retard, dashboardStats.agents_absents, dashboardStats.prestations_enseignants],
-            chart: { type: 'donut', height: 280 },
-            labels: ['Présents', 'Retards', 'Absents', 'Enseignants'],
-            colors: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'],
-            legend: { position: 'bottom', fontSize: '13px' },
-            plotOptions: { pie: { donut: { size: '65%' } } },
+            series: repartitionData,
+            chart: { 
+                type: 'donut', 
+                height: 300,
+                foreColor: '#64748b'
+            },
+            labels: repartitionLabels,
+            colors: repartitionColors,
+            theme: { mode: 'light' },
+            legend: { 
+                position: 'bottom', 
+                fontSize: '13px',
+                offsetY: 8
+            },
+            plotOptions: { 
+                pie: { 
+                    donut: { 
+                        size: '55%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                color: '#1e293b',
+                                fontSize: '16px'
+                            }
+                        }
+                    },
+                    expandOnClick: false
+                } 
+            },
             dataLabels: { enabled: false },
-            tooltip: { theme: 'dark' }
+            tooltip: { theme: 'dark' },
+            states: {
+                hover: {
+                    filter: { type: 'none' }
+                },
+                active: {
+                    filter: { type: 'none' }
+                }
+            },
+            grid: { padding: { top: 8, bottom: 8 } }
         }).render();
     }
 });
 </script>
+{{ evolution_labels|json_script:"evolution-labels" }}
+{{ evolution_data|json_script:"evolution-data" }}
+{{ repartition_data|json_script:"repartition-data" }}
+{% endif %}
 {% endblock %}

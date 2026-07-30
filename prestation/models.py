@@ -49,8 +49,8 @@ class Agent(models.Model):
     )
 
     phone_validator = RegexValidator(
-        regex=r'^\+?1?\d{9,15}$',
-        message='Numéro de téléphone invalide. Format attendu: +243XXXXXXXXX'
+        regex=r'^\+?[\d\s\-\(\)]{8,20}$',
+        message='Numéro de téléphone invalide. Format attendu: +243 81 234 5678'
     )
 
     matricule = models.CharField(
@@ -63,7 +63,7 @@ class Agent(models.Model):
     prenom = models.CharField(max_length=100)
     sexe = models.CharField(max_length=10, choices=SEXE_CHOICES)
     telephone = models.CharField(
-        max_length=20,
+        max_length=30,
         validators=[phone_validator]
     )
     email = models.EmailField()
@@ -146,6 +146,12 @@ class Utilisateur(models.Model):
     must_change_password = models.BooleanField(
         default=True,
         help_text='Indique si l\'utilisateur doit changer son mot de passe à la prochaine connexion'
+    )
+    mot_de_passe_temporaire = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        help_text='Mot de passe temporaire visible par l\'administrateur (effacé après changement par l\'utilisateur)'
     )
 
     class Meta:
@@ -671,7 +677,8 @@ def creer_utilisateur(sender, instance, created, **kwargs):
             user=user,
             agent=instance,
             role=role,
-            must_change_password=True
+            must_change_password=True,
+            mot_de_passe_temporaire=password
         )
 
         print(f"Utilisateur créé pour {instance.nom_complet()}")

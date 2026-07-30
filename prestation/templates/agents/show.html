@@ -12,6 +12,23 @@
 {% endblock %}
 
 {% block content %}
+<!-- Header avec boutons Modifier et Retour -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-person me-2 text-primary"></i>{{ agent.nom_complet }}
+        </h5>
+        <div class="btn-group">
+            <a href="{% url 'agent_edit' agent.id %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Modifier
+            </a>
+            <a href="{% url 'agents' %}" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Retour
+            </a>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <!-- Profile Card -->
     <div class="col-lg-4">

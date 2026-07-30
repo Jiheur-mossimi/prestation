@@ -25,16 +25,16 @@
 <!-- Filter Card -->
 <div class="card mb-4">
     <div class="card-body">
-        <div class="row g-3">
+        <form method="get" class="row g-3">
             <div class="col-md-3">
-                <input type="text" class="form-control" placeholder="Rechercher...">
+                <input type="text" class="form-control search-input" placeholder="Rechercher..." data-target=".datatable">
             </div>
             <div class="col-md-3">
-                <select class="form-select">
+                <select class="form-select" name="service" onchange="this.form.submit()">
                     <option value="">Tous les services</option>
-                    <option value="1">Enseignement</option>
-                    <option value="2">Administration</option>
-                    <option value="3">Discipline</option>
+                    {% for service in services %}
+                    <option value="{{ service.id }}" {% if service_filter == service.id|stringformat:'s' %}selected{% endif %}>{{ service.nom }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="col-md-3">
@@ -46,11 +46,18 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <button class="btn btn-outline w-100">
+                <button type="submit" class="btn btn-outline w-100">
                     <i class="bi bi-funnel me-2"></i>Filtrer
                 </button>
             </div>
-        </div>
+            {% if service_filter %}
+            <div class="col-md-3">
+                <a href="{% url 'agents' %}" class="btn btn-outline w-100">
+                    <i class="bi bi-x-circle me-2"></i>Réinitialiser
+                </a>
+            </div>
+            {% endif %}
+        </form>
     </div>
 </div>
 

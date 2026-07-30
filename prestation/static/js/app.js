@@ -341,71 +341,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ============================
     // APEXCHARTS INITIALIZATION
+    // Ces graphiques sont gérés dans le template dashboard.html
     // ============================
-    if (typeof ApexCharts !== 'undefined') {
-        // Line Chart
-        const lineChartEl = document.querySelector('#lineChart');
-        if (lineChartEl) {
-            const lineChart = new ApexCharts(lineChartEl, {
-                series: [{
-                    name: 'Prestations',
-                    data: [30, 40, 35, 50, 49, 60, 70, 91, 125]
-                }],
-                chart: {
-                    type: 'area',
-                    height: 350,
-                    toolbar: { show: false }
-                },
-                colors: ['#3b82f6'],
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shadeIntensity: 1,
-                        opacityFrom: 0.7,
-                        opacityTo: 0.2,
-                        stops: [0, 90, 100]
-                    }
-                },
-                xaxis: {
-                    categories: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep']
-                },
-                stroke: {
-                    curve: 'smooth',
-                    width: 2
-                },
-                grid: {
-                    borderColor: '#e2e8f0',
-                    strokeDashArray: 4
-                }
-            });
-            lineChart.render();
-        }
-
-        // Donut Chart
-        const donutChartEl = document.querySelector('#donutChart');
-        if (donutChartEl) {
-            const donutChart = new ApexCharts(donutChartEl, {
-                series: [44, 55, 13, 33],
-                chart: {
-                    type: 'donut',
-                    height: 350
-                },
-                labels: ['Enseignants', 'Administratif', 'Discipline', 'Surveillants'],
-                colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
-                legend: {
-                    position: 'bottom'
-                },
-                plotOptions: {
-                    pie: {
-                        donut: {
-                            size: '70%'
-                        }
-                    }
-                }
-            });
-            donutChart.render();
-        }
-    }
 
     // ============================
     // TIMER FOR LIVE PRESTATIONS
