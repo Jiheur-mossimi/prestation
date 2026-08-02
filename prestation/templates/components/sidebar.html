@@ -22,10 +22,11 @@
                 <span>Mon Pointage</span>
             </a>
         </li>
+        {% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' %}
         <li>
             <a href="{% url 'sessions_list' %}" class="{% if 'sessions' in request.path %}active{% endif %}">
                 <i class="bi bi-calendar-check"></i>
-                <span>Session Prestation</span>
+                <span>Sessions Prestation</span>
             </a>
         </li>
         <li>
@@ -34,7 +35,6 @@
                 <span>Prestations Enseignants</span>
             </a>
         </li>
-        {% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
         <li>
             <a href="{% url 'prestations_list' %}" class="{% if 'prestations-generales' in request.path %}active{% endif %}">
                 <i class="bi bi-people"></i>
@@ -111,7 +111,7 @@
         </li>
         {% endif %}
         
-        {% if user.utilisateur.role not in 'ADMIN,SECRETAIRE' %}
+        {% if user.utilisateur.role != 'ADMIN' and user.utilisateur.role != 'SECRETAIRE' %}
         <li class="menu-header">Mon Compte</li>
         <li>
             <a href="{% url 'mon_historique' %}" class="{% if 'mon_historique' in request.path %}active{% endif %}">
@@ -119,12 +119,14 @@
                 <span>Mon Historique</span>
             </a>
         </li>
+        {% if user.utilisateur.role == 'ENSEIGNANT' %}
         <li>
-            <a href="{% url 'parametres' %}" class="{% if 'parametres' in request.path %}active{% endif %}">
-                <i class="bi bi-gear"></i>
-                <span>Paramètres</span>
+            <a href="{% url 'prestations_enseignants_list' %}" class="{% if 'prestations-enseignants' in request.path %}active{% endif %}">
+                <i class="bi bi-book"></i>
+                <span>Mes Cours</span>
             </a>
         </li>
+        {% endif %}
         {% endif %}
     </ul>
     

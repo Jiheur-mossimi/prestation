@@ -18,70 +18,322 @@
         <p class="text-muted mb-0">
             Session {{ session.get_statut_display }}
             - Ouverte à {{ session.heure_ouverture|time:"H:i" }}
+            {% if session.heure_limite %}
+            - Heure limite: {{ session.heure_limite|time:"H:i" }}
+            {% endif %}
             {% if session.heure_fermeture %}
             - Fermée à {{ session.heure_fermeture|time:"H:i" }}
             {% endif %}
         </p>
     </div>
-    {% if session.statut == 'EN_COURS' and user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
-    <a href="{% url 'clore_session' session.id %}" class="btn btn-danger">
-        <i class="bi bi-stop-circle me-2"></i>Clôturer la session
-    </a>
-    {% endif %}
+    <div class="d-flex gap-2">
+        {% if session.statut == 'EN_COURS' and user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' %}
+        <a href="{% url 'clore_session' session.id %}" class="btn btn-danger">
+            <i class="bi bi-stop-circle me-2"></i>Clôturer la session
+        </a>
+        {% endif %}
+        
+        {% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' and session.statut == 'EN_COURS' %}
+        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalHeureLimite">
+            <i class="bi bi-clock me-2"></i>
+            {% if session.heure_limite %}Modifier heure limite{% else %}Définir heure limite{% endif %}
+        </button>
+        {% endif %}
+    </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-people me-2"></i>Présences Générales ({{ prestations|length }} agents)
-                </h5>
+<!-- Statistiques globales -->
+<div class="row mb-4" id="stats-globales">
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle" style="font-size: 2rem; color: #10b981;"></i>
+                <h3 class="text-success mb-0" id="count-presents">{{ stats_session.total_presents }}</h3>
+                <p class="text-muted mb-0">Présents</p>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Agent</th>
-                                <th>Service</th>
-                                <th>Arrivée</th>
-                                <th>Départ</th>
-                                <th>Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for prestation in prestations %}
-                            <tr>
-                                <td>
-                                    <div class="user-info">
-                                        {% if prestation.agent.photo %}
-                                        <img src="{{ prestation.agent.photo.url }}" alt="" class="avatar">
-                                        {% else %}
-                                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23374151'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20'%3E{{ prestation.agent.nom|first|upper }}%3C/text%3E%3C/svg%3E" alt="" class="avatar">
-                                        {% endif %}
-                                        <div class="name">{{ prestation.agent.nom_complet }}</div>
-                                    </div>
-                                </td>
-                                <td>{{ prestation.agent.service.nom }}</td>
-                                <td>{{ prestation.heure_arrivee|time:"H:i"|default:"-" }}</td>
-                                <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
-                                <td>
-                                    <span class="badge badge-{% if prestation.statut == 'PRESENT' %}success{% elif prestation.statut == 'RETARD' %}warning{% elif prestation.statut == 'ABSENT' %}danger{% else %}secondary{% endif %}">
-                                        {{ prestation.get_statut_display }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">Aucune prestation</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: #f59e0b;"></i>
+                <h3 class="text-warning mb-0" id="count-retards">{{ stats_session.total_retards }}</h3>
+                <p class="text-muted mb-0">Retards</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <i class="bi bi-x-circle" style="font-size: 2rem; color: #ef4444;"></i>
+                <h3 class="text-danger mb-0" id="count-absents">{{ stats_session.total_absents }}</h3>
+                <p class="text-muted mb-0">Absents</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info">
+            <div class="card-body text-center">
+                <i class="bi bi-people" style="font-size: 2rem; color: #3b82f6;"></i>
+                <h3 class="text-info mb-0" id="count-total">{{ stats_session.total_agents }}</h3>
+                <p class="text-muted mb-0">Total Agents</p>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Tableau des personnels PRÉSENTS -->
+{% if prestations_presents %}
+<div class="card mb-4 border-success">
+    <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">
+            ✅ Agents Présents ({{ stats_session.total_presents }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nom Complet</th>
+                        <th>Service</th>
+                        <th>Heure Arrivée</th>
+                        <th>Heure Départ</th>
+                        <th>Durée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestation in prestations_presents %}
+                    <tr>
+                        <td>{{ prestation.agent.nom_complet }}</td>
+                        <td>{{ prestation.agent.service.nom }}</td>
+                        <td>{{ prestation.heure_arrivee|time:"H:i" }}</td>
+                        <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
+                        <td>{{ prestation.duree_prestation }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tableau des personnels EN RETARD -->
+{% if prestations_retards %}
+<div class="card mb-4 border-warning">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="card-title mb-0">
+            ⚠️ Agents en Retard ({{ stats_session.total_retards }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nom Complet</th>
+                        <th>Service</th>
+                        <th>Heure Arrivée</th>
+                        <th>Heure Départ</th>
+                        <th>Durée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestation in prestations_retards %}
+                    <tr>
+                        <td>{{ prestation.agent.nom_complet }}</td>
+                        <td>{{ prestation.agent.service.nom }}</td>
+                        <td>{{ prestation.heure_arrivee|time:"H:i" }}</td>
+                        <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
+                        <td>{{ prestation.duree_prestation }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tableau des personnels ABSENTS -->
+{% if prestations_absents %}
+<div class="card mb-4 border-danger">
+    <div class="card-header bg-danger text-white">
+        <h5 class="card-title mb-0">
+            ❌ Agents Absents ({{ stats_session.total_absents }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nom Complet</th>
+                        <th>Service</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestation in prestations_absents %}
+                    <tr>
+                        <td>{{ prestation.agent.nom_complet }}</td>
+                        <td>{{ prestation.agent.service.nom }}</td>
+                        <td><span class="badge bg-danger">Absent</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tableau des personnels TERMINÉS (après pointage de départ) -->
+{% if prestations_termines %}
+<div class="card mb-4 border-info">
+    <div class="card-header bg-info text-white">
+        <h5 class="card-title mb-0">
+            🏁 Agents Terminés ({{ stats_session.total_termines }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nom Complet</th>
+                        <th>Service</th>
+                        <th>Heure Arrivée</th>
+                        <th>Heure Départ</th>
+                        <th>Durée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestation in prestations_termines %}
+                    <tr>
+                        <td>{{ prestation.agent.nom_complet }}</td>
+                        <td>{{ prestation.agent.service.nom }}</td>
+                        <td>{{ prestation.heure_arrivee|time:"H:i" }}</td>
+                        <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
+                        <td>{{ prestation.duree_prestation }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tableau des prestations enseignants -->
+{% if prestations_enseignants %}
+<div class="card mb-4 border-primary">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">
+            📚 Prestations Enseignants ({{ stats_session.total_cours }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Enseignant</th>
+                        <th>Cours</th>
+                        <th>Classe</th>
+                        <th>Heure Début</th>
+                        <th>Heure Fin</th>
+                        <th>Observation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pe in prestations_enseignants %}
+                    <tr>
+                        <td>{{ pe.prestation.agent.nom_complet }}</td>
+                        <td>{{ pe.cours.libelle }}</td>
+                        <td>{{ pe.classe.nom }}</td>
+                        <td>{{ pe.heure_debut|time:"H:i" }}</td>
+                        <td>{{ pe.heure_fin|time:"H:i"|default:"-" }}</td>
+                        <td>{{ pe.observation|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal pour modifier l'heure limite -->
+{% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' and session.statut == 'EN_COURS' %}
+<div class="modal fade" id="modalHeureLimite" tabindex="-1" aria-labelledby="modalHeureLimiteLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalHeureLimiteLabel">Définir l'heure limite</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{% url 'modifier_heure_limite' session.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="heure_limite" class="form-label">Heure limite d'arrivée</label>
+                        <input type="time" class="form-control" id="heure_limite" name="heure_limite" value="{{ session.heure_limite|time:'H:i' }}">
+                        <div class="form-text">
+                            Les personnels arrivant après cette heure seront automatiquement marqués comme "En retard".
+                            Laissez vide pour ne pas définir d'heure limite.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if session.statut == 'EN_COURS' %}
+<script>
+// JavaScript de polling pour mise à jour temps réel
+(function() {
+    const apiUrl = "{% url 'api_session_stats' session.id %}";
+    let pollingInterval;
+    
+    function updateStats() {
+        fetch(apiUrl)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                // Mettre à jour les compteurs
+                document.getElementById('count-presents').textContent = data.total_presents;
+                document.getElementById('count-retards').textContent = data.total_retards;
+                document.getElementById('count-absents').textContent = data.total_absents;
+                document.getElementById('count-total').textContent = data.total_agents;
+            })
+            .catch(function(error) {
+                console.error('Erreur lors de la mise à jour des stats:', error);
+            });
+    }
+    
+    // Mettre à jour immédiatement
+    updateStats();
+    // Puis toutes les 10 secondes pour un temps réel plus réactif
+    pollingInterval = setInterval(updateStats, 10000);
+    
+    // Nettoyer lors de la navigation
+    window.addEventListener('beforeunload', function() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+        }
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

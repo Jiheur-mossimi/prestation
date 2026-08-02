@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ouvrir une Session - Gestion des Prestations{% endblock %}
+
+{% block page_title %}Ouvrir une Nouvelle Session{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item"><a href="{% url 'sessions_list' %}">Sessions</a></li>
+<li class="breadcrumb-item active" aria-current="page">Ouvrir une session</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-play-circle me-2 text-primary"></i>Nouvelle Session de Prestation
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Vous allez ouvrir une session de prestation pour aujourd'hui. 
+                    Veuillez définir l'heure limite d'arrivée pour les personnels.
+                </p>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="heure_limite" class="form-label">
+                            <i class="bi bi-clock me-2"></i>Heure limite d'arrivée
+                        </label>
+                        <input type="time" class="form-control" id="heure_limite" name="heure_limite" required>
+                        <div class="form-text">
+                            Les personnels arrivant après cette heure seront automatiquement marqués comme "En retard".
+                            Exemple: 08:00 pour 8h00, 07:30 pour 7h30.
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Information:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>La session sera ouverte immédiatement après confirmation</li>
+                            <li>Tous les personnels actifs seront créés avec le statut "Absent"</li>
+                            <li>Les personnels pourront pointer leur arrivée dès maintenant</li>
+                            <li>L'heure limite pourra être modifiée ultérieurement si nécessaire</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-play-circle me-2"></i>Ouvrir la session
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

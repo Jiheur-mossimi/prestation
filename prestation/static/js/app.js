@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', function(event) {
             event.preventDefault();
+            event.stopPropagation();
             toggleSidebar();
         });
     }
@@ -39,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (mobileToggle) {
         mobileToggle.addEventListener('click', function(event) {
             event.preventDefault();
+            event.stopPropagation();
             toggleSidebar();
         });
     }
@@ -237,19 +239,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const phoneInputs = document.querySelectorAll('.phone-input');
     phoneInputs.forEach(input => {
         input.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 9) {
-                value = value.substring(0, 13);
+            // Permettre la saisie libre : +, chiffres, espaces, tirets, parenthèses
+            // Limiter à 20 caractères maximum
+            let value = e.target.value;
+            if (value.length > 20) {
+                value = value.substring(0, 20);
             }
-            
-            if (value.length > 6) {
-                value = `+${value.substring(0, 3)} ${value.substring(3, 5)} ${value.substring(5, 8)} ${value.substring(8)}`;
-            } else if (value.length > 3) {
-                value = `+${value.substring(0, 3)} ${value.substring(3)}`;
-            } else if (value.length > 0) {
-                value = `+${value}`;
-            }
-            
             e.target.value = value;
         });
     });

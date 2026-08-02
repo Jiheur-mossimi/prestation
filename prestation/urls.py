@@ -15,6 +15,7 @@ urlpatterns = [
     path('sessions/<int:session_id>/', views.session_detail, name='session_detail'),
     path('sessions/ouvrir/', views.ouvrir_session, name='ouvrir_session'),
     path('sessions/clore/<int:session_id>/', views.clore_session, name='clore_session'),
+    path('sessions/modifier-heure-limite/<int:session_id>/', views.modifier_heure_limite, name='modifier_heure_limite'),
     
     # Pointage
     path('pointage/arrivee/', views.pointer_arrivee, name='pointer_arrivee'),
@@ -27,9 +28,11 @@ urlpatterns = [
     # Prestations enseignants
     path('prestations-enseignants/', views.prestations_enseignants_list, name='prestations_enseignants_list'),
     path('prestations-enseignants/creer/', views.prestation_enseignant_create, name='prestation_enseignant_create'),
+    path('prestations-enseignants/valider/<int:prestation_enseignant_id>/', views.valider_prestation_enseignant, name='valider_prestation_enseignant'),
     
     # API temps réel
     path('api/dashboard-stats/', views.api_dashboard_stats, name='api_dashboard_stats'),
+    path('api/session/<int:session_id>/stats/', views.api_session_stats, name='api_session_stats'),
     path('api/prestations-en-cours/', views.api_prestations_en_cours, name='api_prestations_en_cours'),
     
     # Entités existantes

@@ -87,7 +87,7 @@
                 <div class="d-flex justify-content-between py-2">
                     <span class="text-muted">Rôle</span>
                     <strong>
-                        <span class="badge badge-{% if utilisateur.role == 'ADMIN' %}danger{% elif utilisateur.role == 'SECRETAIRE' %}info{% elif utilisateur.role == 'ENSEIGNANT' %}success{% elif utilisateur.role == 'PREFET' %}warning{% else %}secondary{% endif %}">
+                        <span class="badge badge-{% if utilisateur.role == 'ADMIN' %}danger{% elif utilisateur.role == 'SECRETAIRE' %}info{% elif utilisateur.role == 'ENSEIGNANT' %}success{% elif utilisateur.role == 'AGENT' %}warning{% else %}secondary{% endif %}">
                             {{ utilisateur.get_role_display }}
                         </span>
                     </strong>

@@ -72,7 +72,7 @@
     <div class="stat-card primary">
         <div class="stat-info">
             <h6>Total Prestations</h6>
-            <h3>1,234</h3>
+            <h3>{{ stats.total_prestations }}</h3>
         </div>
         <div class="stat-icon">
             <i class="bi bi-calendar-check"></i>
@@ -81,7 +81,7 @@
     <div class="stat-card success">
         <div class="stat-info">
             <h6>Taux Présence</h6>
-            <h3>94%</h3>
+            <h3>{{ stats.taux_presence }}%</h3>
         </div>
         <div class="stat-icon">
             <i class="bi bi-graph-up"></i>
@@ -90,7 +90,7 @@
     <div class="stat-card warning">
         <div class="stat-info">
             <h6>Retards</h6>
-            <h3>23</h3>
+            <h3>{{ stats.agents_retard }}</h3>
         </div>
         <div class="stat-icon">
             <i class="bi bi-clock"></i>
@@ -99,7 +99,7 @@
     <div class="stat-card info">
         <div class="stat-info">
             <h6>Absences</h6>
-            <h3>12</h3>
+            <h3>{{ stats.agents_absents }}</h3>
         </div>
         <div class="stat-icon">
             <i class="bi bi-person-x"></i>

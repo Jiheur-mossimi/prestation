@@ -25,7 +25,7 @@
                 <form method="post" enctype="multipart/form-data" novalidate
                   data-confirm
                   data-confirm-title="Confirmer l'enregistrement"
-                  data-confirm-message="Êtes-vous sûr de vouloir enregistrer cet agent ?"
+                  data-confirm-message="Êtes-vous sûr de vouloir enregistrer ce personnel ?"
                   data-confirm-details="Vérifiez les informations avant de confirmer.">
                     {% csrf_token %}
                     
@@ -39,10 +39,10 @@
                     {% endif %}
 
                     <div class="row">
-                        <!-- Informations Personnelles -->
+                        <!-- Informations de l'Agent -->
                         <div class="col-md-6">
                             <h6 class="mb-3 text-primary">
-                                <i class="bi bi-person me-2"></i>Informations Personnelles
+                                <i class="bi bi-person me-2"></i>Informations de l'Agent
                             </h6>
                             
                             <div class="form-group">

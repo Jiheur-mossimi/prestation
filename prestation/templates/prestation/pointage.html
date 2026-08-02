@@ -12,7 +12,7 @@
 
 {% block content %}
 {% if session_active %}
-<div class="row justify-content-center">
+<div class="row">
     <div class="col-md-6">
         {% if prestation_terminee %}
         <div class="card">
@@ -23,6 +23,14 @@
                 <h4>Session clôturée</h4>
                 <p class="text-muted">La prestation a été clôturée pour aujourd'hui.</p>
                 <span class="badge badge-success">{{ statut }}</span>
+                
+                {% if total_prestations_jour is not None %}
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h5 class="mb-0">Total des prestations du jour</h5>
+                    <h2 class="text-primary mb-0">{{ total_prestations_jour }}</h2>
+                    <small class="text-muted">personnels présents, en retard ou terminés</small>
+                </div>
+                {% endif %}
             </div>
         </div>
         {% else %}
@@ -33,7 +41,15 @@
                 </div>
                 <h4>Session en cours</h4>
                 <p class="text-muted">Pointer votre arrivée et/ou votre départ</p>
-                <div class="d-grid gap-2">
+                {% if session.heure_limite %}
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Heure limite:</strong> {{ session.heure_limite|time:"H:i" }}
+                    <br><small>Arrivée après cette heure = Retard</small>
+                </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2 mt-3">
                     {% if peut_pointer_arrivee %}
                     <button id="btnArrivee" class="btn btn-success btn-lg">
                         <i class="bi bi-box-arrow-in-right me-2"></i>Pointer mon arrivée
@@ -45,16 +61,136 @@
                     </button>
                     {% endif %}
                 </div>
+                
                 {% if heure_arrivee %}
-                <p class="text-muted mt-3 mb-0">Arrivée: {{ heure_arrivee }}</p>
+                <div class="mt-3">
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        <strong>Arrivée pointée à {{ heure_arrivee|time:"H:i" }}</strong>
+                    </div>
+                </div>
                 {% endif %}
                 {% if heure_depart %}
-                <p class="text-muted">Départ: {{ heure_depart }} | Durée: {{ duree }}</p>
+                <div class="mt-2">
+                    <div class="alert alert-info">
+                        <i class="bi bi-check-circle me-2"></i>
+                        <strong>Départ pointé à {{ heure_depart|time:"H:i" }}</strong>
+                        {% if duree %}
+                        <span class="badge bg-primary ms-2">{{ duree }}</span>
+                        {% endif %}
+                    </div>
+                </div>
                 {% endif %}
             </div>
         </div>
         {% endif %}
     </div>
+    
+    <!-- Section Prestations Enseignants (pour enseignants) -->
+    {% if user.utilisateur.role == 'ENSEIGNANT' and session and session.heure_fermeture %}
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-book me-2"></i>Mes Cours du Jour</h5>
+            </div>
+            <div class="card-body">
+                {% if peut_pointer_arrivee %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Veuillez d'abord pointer votre arrivée avant de déclarer vos cours.
+                </div>
+                {% else %}
+                <!-- Formulaire d'ajout de cours -->
+                <form method="POST" action="{% url 'prestation_enseignant_create' %}" class="mb-3">
+                    {% csrf_token %}
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <select name="cours" class="form-select" required>
+                                <option value="">Cours</option>
+                                {% for cours in cours_list %}
+                                <option value="{{ cours.id }}">{{ cours.libelle }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <select name="classe" class="form-select" required>
+                                <option value="">Classe</option>
+                                {% for classe in classe_list %}
+                                <option value="{{ classe.id }}">{{ classe.nom }} ({{ classe.niveau }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="time" name="heure_debut" class="form-control" required placeholder="Heure début">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="time" name="heure_fin" class="form-control" required placeholder="Heure fin">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-circle me-1"></i>Ajouter
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <textarea name="observation" class="form-control" rows="2" placeholder="Observation (optionnel)"></textarea>
+                    </div>
+                </form>
+                
+                <!-- Section des cours prestés -->
+                {% if prestations_cours %}
+                <div class="mt-3">
+                    <h6 class="text-primary mb-2">
+                        <i class="bi bi-book me-1"></i>Mes Cours Prestations du Jour
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Cours</th>
+                                    <th>Classe</th>
+                                    <th>Début</th>
+                                    <th>Fin</th>
+                                    <th>Durée</th>
+                                    <th>Observation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pc in prestations_cours %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ pc.cours.libelle }}</td>
+                                    <td>{{ pc.classe.nom }}</td>
+                                    <td>{{ pc.heure_debut|time:"H:i" }}</td>
+                                    <td>{{ pc.heure_fin|time:"H:i" }}</td>
+                                    <td><strong>{{ pc.duree_cours }}</strong></td>
+                                    <td>{{ pc.observation|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-primary">
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Total:</strong></td>
+                                    <td colspan="2">
+                                        <strong>{{ prestations_cours|length }} cours</strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Aucun cours enregistré aujourd'hui
+                </p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% else %}
 <div class="row justify-content-center">

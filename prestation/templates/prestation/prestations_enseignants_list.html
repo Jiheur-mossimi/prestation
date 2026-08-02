@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load prestation_extras %}
 
 {% block title %}Prestations Enseignants - Gestion des Prestations{% endblock %}
 
@@ -30,22 +31,58 @@
                     <table class="table table-sm mb-3">
                         <thead>
                             <tr>
+                                <th>Enseignant</th>
                                 <th>Cours</th>
                                 <th>Classe</th>
                                 <th>Horaire</th>
+                                <th>Durée</th>
+                                <th>Statut</th>
+                                {% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
+                                <th>Actions</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
-                            {% for pe in prestations|slice:":3" %}
+                            {% for pe in prestations %}
                             <tr>
+                                <td>{{ pe.prestation.agent.nom_complet }}</td>
                                 <td>{{ pe.cours.libelle }}</td>
                                 <td>{{ pe.classe.nom }}</td>
+                                <td>{{ pe.heure_debut|time:"H:i" }} - {{ pe.heure_fin|time:"H:i" }}</td>
+                                <td><strong>{{ pe.duree_cours }}</strong></td>
                                 <td>
-                                    {{ pe.heure_debut|time:"H:i" }}
+                                    {% if pe.valide %}
+                                        <span class="badge badge-success">Validé</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">En attente</span>
+                                    {% endif %}
                                 </td>
+                                {% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
+                                <td>
+                                    {% if not pe.valide %}
+                                    <a href="{% url 'valider_prestation_enseignant' pe.id %}" 
+                                       class="btn btn-sm btn-success"
+                                       onclick="event.preventDefault(); document.getElementById('validerForm{{ pe.id }}').submit();">
+                                         <i class="bi bi-check-circle"></i> Valider
+                                    </a>
+                                    <form id="validerForm{{ pe.id }}" method="POST" action="{% url 'valider_prestation_enseignant' pe.id %}" style="display:none;">
+                                        {% csrf_token %}
+                                    </form>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
                             </tr>
                             {% endfor %}
                         </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <td colspan="4"><strong>Total pour cette date:</strong></td>
+                                <td><strong>{{ total_by_date|get_item:date|format_minutes }}</strong></td>
+                                <td colspan="{% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}2{% else %}1{% endif %}">
+                                    <span class="badge badge-primary">{{ prestations|length }} cours</span>
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
                 

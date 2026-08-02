@@ -123,8 +123,7 @@ class Utilisateur(models.Model):
         ('ADMIN', 'Administrateur'),
         ('SECRETAIRE', 'Secrétaire'),
         ('ENSEIGNANT', 'Enseignant'),
-        ('PREFET', 'Préfet de discipline'),
-        ('SURVEILLANT', 'Surveillant'),
+        ('AGENT', 'Agent'),
     )
 
     user = models.OneToOneField(
@@ -133,7 +132,7 @@ class Utilisateur(models.Model):
         related_name='utilisateur'
     )
     agent = models.OneToOneField(
-        Agent,
+        'Agent',
         on_delete=models.CASCADE,
         related_name='utilisateur'
     )
@@ -319,6 +318,11 @@ class SessionPrestation(models.Model):
     date = models.DateField(unique=True)
     heure_ouverture = models.TimeField(null=True, blank=True)
     heure_fermeture = models.TimeField(null=True, blank=True)
+    heure_limite = models.TimeField(
+        null=True,
+        blank=True,
+        help_text='Heure limite pour arriver à l\'heure (après cette heure, l\'agent est en retard)'
+    )
     statut = models.CharField(
         max_length=20,
         choices=STATUT_SESSION,
@@ -353,12 +357,10 @@ class SessionPrestation(models.Model):
         return f"Session du {self.date.strftime('%d/%m/%Y')} - {self.get_statut_display()}"
 
     def nombre_agents_presents(self):
-        return self.prestations.filter(statut__in=['PRESENT', 'RETARD']).count()
+        return self.prestations.filter(statut__in=['PRESENT', 'RETARD', 'TERMINE']).count()
 
     def nombre_prestations_enseignants(self):
-        return self.prestations.aggregate(
-            total=models.Count('prestations_cours')
-        )['total'] or 0
+        return PrestationEnseignant.objects.filter(prestation__session=self).count()
 
 
 # ==========================
@@ -370,14 +372,12 @@ class Prestation(models.Model):
     STATUS_RETARD = 'RETARD'
     STATUS_ABSENT = 'ABSENT'
     STATUS_EN_COURS = 'EN_COURS'
-    STATUS_TERMINE = 'TERMINE'
 
     STATUT = (
         (STATUS_PRESENT, 'Présent'),
         (STATUS_RETARD, 'Retard'),
         (STATUS_ABSENT, 'Absent'),
         (STATUS_EN_COURS, 'En cours'),
-        (STATUS_TERMINE, 'Terminé'),
     )
 
     session = models.ForeignKey(
@@ -388,12 +388,15 @@ class Prestation(models.Model):
         blank=True
     )
     agent = models.ForeignKey(
-        Agent,
+        'Agent',
         on_delete=models.PROTECT,
         related_name="prestations"
     )
     date = models.DateField()
-    heure_arrivee = models.TimeField()
+    heure_arrivee = models.TimeField(
+        blank=True,
+        null=True
+    )
     heure_depart = models.TimeField(
         blank=True,
         null=True
@@ -440,6 +443,25 @@ class Prestation(models.Model):
             return f"{heures}h{minutes:02d}"
         return None
 
+    def get_statut_display_custom(self):
+        """Retourne un statut détaillé selon l'heure d'arrivée et de départ"""
+        if self.statut == self.STATUS_EN_COURS:
+            return "En cours"
+        elif self.statut == self.STATUS_ABSENT:
+            return "Absent"
+        elif self.statut == self.STATUS_RETARD:
+            return "Retard"
+        elif self.statut == self.STATUS_PRESENT:
+            # Vérifier si c'est vraiment présent ou retard selon l'heure limite
+            if self.session and self.session.heure_limite and self.heure_arrivee:
+                from datetime import datetime
+                limite = datetime.combine(self.date, self.session.heure_limite)
+                arrivee = datetime.combine(self.date, self.heure_arrivee)
+                if arrivee > limite:
+                    return "Retard"
+            return "Présent"
+        return self.get_statut_display()
+
     def clean(self):
         """Validation personnalisée"""
         from django.core.exceptions import ValidationError
@@ -475,6 +497,21 @@ class PrestationEnseignant(models.Model):
     observation = models.TextField(
         blank=True,
         null=True
+    )
+    valide = models.BooleanField(
+        default=False,
+        help_text='Indique si la prestation enseignant a été validée par un administrateur/secrétaire'
+    )
+    valide_par = models.ForeignKey(
+        Utilisateur,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='prestations_enseignants_validees'
+    )
+    date_validation = models.DateTimeField(
+        null=True,
+        blank=True
     )
 
     class Meta:
@@ -651,11 +688,11 @@ import secrets
 def creer_utilisateur(sender, instance, created, **kwargs):
     """
     Crée automatiquement un utilisateur Django lors de la création d'un agent.
-    Génère un mot de passe sécurisé aléatoire.
+    Utilise le mot de passe par défaut 'demo123' pour tous les utilisateurs.
     """
     if created:
         username = instance.matricule.lower()
-        password = secrets.token_urlsafe(12)
+        password = 'demo123'
 
         user = User.objects.create_user(
             username=username,
@@ -669,9 +706,9 @@ def creer_utilisateur(sender, instance, created, **kwargs):
         role_mapping = {
             'ENSEIGNANT': 'ENSEIGNANT',
             'ADMINISTRATIF': 'SECRETAIRE',
-            'DISCIPLINE': 'PREFET',
+            'DISCIPLINE': 'AGENT',
         }
-        role = role_mapping.get(instance.type_agent, 'SECRETAIRE')
+        role = role_mapping.get(instance.type_agent, 'AGENT')
 
         Utilisateur.objects.create(
             user=user,
@@ -683,5 +720,4 @@ def creer_utilisateur(sender, instance, created, **kwargs):
 
         print(f"Utilisateur créé pour {instance.nom_complet()}")
         print(f"Username: {username}")
-        print(f"Mot de passe temporaire: {password}")
-        print("L'utilisateur doit changer ce mot de passe lors de sa première connexion.")
+        print(f"Mot de passe: {password}")

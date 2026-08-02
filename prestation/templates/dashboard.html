@@ -3,7 +3,7 @@
 
 {% block title %}Tableau de bord - Gestion des Prestations{% endblock %}
 
-{% block page_title %}Tableau de Bord{% if user.utilisateur.role not in 'ADMIN,SECRETAIRE' %} - {{ user.utilisateur.get_role_display }}{% endif %}{% endblock %}
+{% block page_title %}Tableau de Bord{% if user.utilisateur.role != 'ADMIN' and user.utilisateur.role != 'SECRETAIRE' %} - {{ user.utilisateur.get_role_display }}{% endif %}{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door"></i> Accueil</a></li>
@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-{% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
+{% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' %}
 <!-- ====== VUE ADMIN/SECRETAIRE ====== -->
 
 <!-- Row 1: 4 Stats Cards -->
@@ -22,7 +22,7 @@
                 <div class="stat-icon-sm"><i class="bi bi-people"></i></div>
                 <div class="stat-info-sm">
                     <h3>{{ stats.total_prestations }}</h3>
-                    <h6>Total Agents</h6>
+                     <h6>Total Agents</h6>
                 </div>
             </div>
         </a>
@@ -426,7 +426,7 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
+{% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' %}
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {

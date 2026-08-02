@@ -126,7 +126,41 @@ def sessions_list(request):
 def session_detail(request, session_id):
     session = get_object_or_404(SessionPrestation, pk=session_id)
     prestations = Prestation.objects.filter(session=session).select_related('agent', 'agent__service')
-    return render(request, 'prestation/session_detail.html', {'session': session, 'prestations': prestations})
+    
+    # Récupérer les prestations enseignants pour cette session
+    prestations_enseignants = PrestationEnseignant.objects.filter(
+        prestation__session=session
+    ).select_related('prestation__agent', 'cours', 'classe').order_by('heure_debut')
+    
+    # Grouper les prestations par statut
+    prestations_presents = prestations.filter(statut='PRESENT')
+    prestations_retards = prestations.filter(statut='RETARD')
+    prestations_absents = prestations.filter(statut='ABSENT')
+    prestations_termines = prestations.filter(statut='TERMINE')
+    prestations_en_cours = prestations.filter(statut='EN_COURS')
+    
+    # Calculer les statistiques
+    stats_session = {
+        'total_presents': prestations_presents.count(),
+        'total_retards': prestations_retards.count(),
+        'total_absents': prestations_absents.count(),
+        'total_termines': prestations_termines.count(),
+        'total_en_cours': prestations_en_cours.count(),
+        'total_agents': prestations.count(),
+        'total_cours': prestations_enseignants.count(),
+    }
+    
+    return render(request, 'prestation/session_detail.html', {
+        'session': session,
+        'prestations': prestations,
+        'prestations_presents': prestations_presents,
+        'prestations_retards': prestations_retards,
+        'prestations_absents': prestations_absents,
+        'prestations_termines': prestations_termines,
+        'prestations_en_cours': prestations_en_cours,
+        'prestations_enseignants': prestations_enseignants,
+        'stats_session': stats_session,
+    })
 
 
 @login_required
@@ -134,18 +168,58 @@ def session_detail(request, session_id):
 def ouvrir_session(request):
     today = date.today()
     if SessionPrestation.objects.filter(date=today, statut='EN_COURS').exists():
+        messages.warning(request, 'Une session est déjà ouverte pour aujourd\'hui.')
         return redirect('dashboard')
     
-    session = SessionPrestation.objects.create(
-        date=today, heure_ouverture=timezone.now().time(),
-        statut='EN_COURS', ouvert_par=request.user.utilisateur
-    )
-    for agent in Agent.objects.filter(etat=True):
-        Prestation.objects.get_or_create(
-            agent=agent, date=today, session=session,
-            defaults={'heure_arrivee': None, 'statut': 'ABSENT'}
-        )
-    return redirect('dashboard')
+    if request.method == 'POST':
+        try:
+            heure_limite = request.POST.get('heure_limite')
+            session = SessionPrestation.objects.create(
+                date=today, 
+                heure_ouverture=timezone.now().time(),
+                heure_limite=heure_limite if heure_limite else None,
+                statut='EN_COURS', 
+                ouvert_par=request.user.utilisateur
+            )
+            
+            # Créer les prestations pour tous les agents actifs
+            agents_actifs = Agent.objects.filter(etat=True)
+            count_agents = 0
+            for agent in agents_actifs:
+                _, created = Prestation.objects.get_or_create(
+                    agent=agent, 
+                    date=today, 
+                    session=session,
+                    defaults={'heure_arrivee': None, 'statut': 'ABSENT'}
+                )
+                if created:
+                    count_agents += 1
+            
+            # Envoyer une notification à tous les agents et enseignants
+            sujet = f'Session de prestation ouverte - {today.strftime("%d/%m/%Y")}'
+            message = f'Une session de prestation a été ouverte par {request.user.utilisateur.agent.nom_complet()}.\nHeure limite d\'arrivée: {heure_limite if heure_limite else "Non définie"}.\nVeuillez pointer votre arrivée.'
+            
+            # Envoyer à tous les utilisateurs sauf l'admin lui-même
+            count_notifications = 0
+            for utilisateur in Utilisateur.objects.exclude(user=request.user):
+                Remarque.objects.create(
+                    categorie='NOTIFICATION',
+                    sujet=sujet,
+                    message=message,
+                    expediteur=request.user,
+                    destinataire=utilisateur.user,
+                    lu=False
+                )
+                count_notifications += 1
+            
+            messages.success(request, f'Session du {today.strftime("%d/%m/%Y")} ouverte avec succès! {count_agents} agents créés, {count_notifications} notifications envoyées.')
+            return redirect('dashboard')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'ouverture de la session: {str(e)}')
+            return redirect('ouvrir_session')
+    
+    # Afficher le formulaire de création de session avec heure limite
+    return render(request, 'prestation/ouvrir_session.html')
 
 
 @login_required
@@ -155,14 +229,83 @@ def clore_session(request, session_id):
     if session.statut == 'TERMINEE':
         return redirect('session_detail', session_id=session.id)
     
-    Prestation.objects.filter(
-        session=session, statut__in=['PRESENT', 'RETARD', 'EN_COURS']
-    ).update(statut='TERMINE')
+    # Récupérer toutes les prestations de la session
+    prestations = Prestation.objects.filter(session=session)
+    
+    # Pour chaque prestation :
+    for prestation in prestations:
+        # Si l'agent n'a jamais pointé (pas d'heure_arrivee) → marquer ABSENT
+        if not prestation.heure_arrivee:
+            prestation.statut = Prestation.STATUS_ABSENT
+            prestation.save()
+        # Si l'agent a pointé arrivée mais pas départ → garder PRESENT ou RETARD
+        elif prestation.heure_arrivee and not prestation.heure_depart:
+            prestation.heure_depart = session.heure_fermeture or timezone.now().time()
+            # Garder le statut PRESENT ou RETARD, ne pas utiliser TERMINE
+            prestation.save()
+        # Si l'agent a pointé les deux → garder PRESENT ou RETARD
+        elif prestation.heure_arrivee and prestation.heure_depart:
+            # Ne pas changer le statut, garder PRESENT ou RETARD
+            pass
+    
+    # Vérifier les agents actifs qui n'ont pas de prestation pour cette session
+    agents_actifs = Agent.objects.filter(etat=True)
+    agents_avec_prestation = prestations.values_list('agent_id', flat=True)
+    agents_sans_prestation = agents_actifs.exclude(id__in=agents_avec_prestation)
+    
+    # Créer des prestations ABSENT pour les agents sans prestation
+    count_agents_absents = 0
+    for agent in agents_sans_prestation:
+        Prestation.objects.create(
+            agent=agent,
+            date=session.date,
+            session=session,
+            statut=Prestation.STATUS_ABSENT,
+            heure_arrivee=None,
+            heure_depart=None
+        )
+        count_agents_absents += 1
     
     session.statut = 'TERMINEE'
     session.heure_fermeture = timezone.now().time()
     session.cloture_par = request.user.utilisateur
     session.save()
+    
+    # Notification de clôture
+    sujet = f'Session de prestation clôturée - {session.date.strftime("%d/%m/%Y")}'
+    message = f'La session de prestation du {session.date.strftime("%d/%m/%Y")} a été clôturée par {request.user.utilisateur.agent.nom_complet()}.\nHeure de fermeture: {session.heure_fermeture.strftime("%H:%M")}.\nVous pouvez consulter vos prestations.'
+    
+    for utilisateur in Utilisateur.objects.exclude(user=request.user):
+        Remarque.objects.create(
+            categorie='NOTIFICATION',
+            sujet=sujet,
+            message=message,
+            expediteur=request.user,
+            destinataire=utilisateur.user,
+            lu=False
+        )
+    
+    total_prestations = prestations.count() + count_agents_absents
+    messages.success(request, f'Session clôturée avec succès! {total_prestations} prestations traitées ({count_agents_absents} agents ajoutés comme absents).')
+    return redirect('session_detail', session_id=session.id)
+
+
+@login_required
+@user_passes_test(lambda u: u.utilisateur.role in ['ADMIN', 'SECRETAIRE'])
+def modifier_heure_limite(request, session_id):
+    session = get_object_or_404(SessionPrestation, pk=session_id)
+    
+    if request.method == 'POST':
+        heure_limite = request.POST.get('heure_limite')
+        if heure_limite:
+            session.heure_limite = heure_limite
+            session.save()
+            messages.success(request, f'Heure limite modifiée avec succès : {heure_limite}')
+        else:
+            session.heure_limite = None
+            session.save()
+            messages.success(request, 'Heure limite supprimée')
+    
     return redirect('session_detail', session_id=session.id)
 
 
@@ -180,14 +323,21 @@ def pointer_arrivee(request):
         return JsonResponse({'success': False, 'message': 'Aucune session ouverte'})
     
     agent = request.user.utilisateur.agent
+    heure_actuelle = timezone.now().time()
+    
+    # Déterminer le statut en fonction de l'heure limite
+    statut = 'PRESENT'
+    if session.heure_limite and heure_actuelle > session.heure_limite:
+        statut = 'RETARD'
+    
     prestation, created = Prestation.objects.get_or_create(
         agent=agent, date=today,
-        defaults={'session': session, 'statut': 'PRESENT', 'heure_arrivee': timezone.now().time()}
+        defaults={'session': session, 'statut': statut, 'heure_arrivee': heure_actuelle}
     )
     if not created:
         return JsonResponse({'success': False, 'message': 'Arrivée déjà pointée'})
     
-    return JsonResponse({'success': True, 'message': 'Arrivée enregistrée', 'heure_arrivee': prestation.heure_arrivee.strftime('%H:%M')})
+    return JsonResponse({'success': True, 'message': 'Arrivée enregistrée', 'heure_arrivee': prestation.heure_arrivee.strftime('%H:%M'), 'statut': statut})
 
 
 @login_required
@@ -204,7 +354,7 @@ def pointer_depart(request):
         return JsonResponse({'success': False, 'message': 'Départ déjà pointé'})
     
     prestation.heure_depart = timezone.now().time()
-    prestation.statut = 'TERMINE'
+    # Garder le statut PRESENT ou RETARD, ne pas utiliser TERMINE
     prestation.save()
     return JsonResponse({'success': True, 'message': 'Départ enregistré', 'heure_depart': prestation.heure_depart.strftime('%H:%M'), 'duree': prestation.duree_prestation()})
 
@@ -212,25 +362,46 @@ def pointer_depart(request):
 @login_required
 def pointage(request):
     today = date.today()
-    session = SessionPrestation.objects.filter(date=today, statut='EN_COURS').first()
-    context = {'session_active': session is not None, 'peut_pointer_arrivee': False, 'peut_pointer_depart': False, 'prestation_terminee': False}
+    session = SessionPrestation.objects.filter(date=today).first()
+    context = {'session_active': session is not None and session.statut == 'EN_COURS', 'peut_pointer_arrivee': False, 'peut_pointer_depart': False, 'prestation_terminee': False}
     
     if session:
         agent = request.user.utilisateur.agent
         try:
             prestation = Prestation.objects.get(agent=agent, date=today)
             context.update({
-                'peut_pointer_arrivee': not prestation.heure_arrivee,
-                'peut_pointer_depart': prestation.heure_arrivee and not prestation.heure_depart,
-                'prestation_terminee': prestation.heure_depart is not None,
+                'peut_pointer_arrivee': not prestation.heure_arrivee and session.statut == 'EN_COURS',
+                'peut_pointer_depart': prestation.heure_arrivee and not prestation.heure_depart and session.statut == 'EN_COURS',
+                'prestation_terminee': prestation.heure_depart is not None or session.statut == 'TERMINEE',
                 'heure_arrivee': prestation.heure_arrivee,
                 'heure_depart': prestation.heure_depart,
                 'duree': prestation.duree_prestation(),
                 'statut': prestation.get_statut_display(),
             })
+            
+            # Ajouter le total des prestations de la journée si la session est clôturée
+            if session.statut == 'TERMINEE':
+                context['total_prestations_jour'] = Prestation.objects.filter(
+                    date=today, 
+                    statut__in=['PRESENT', 'RETARD']
+                ).count()
+            
+            # Pour les enseignants: récupérer les cours et classes disponibles
+            if request.user.utilisateur.role == 'ENSEIGNANT':
+                context['cours_list'] = Cours.objects.filter(actif=True)
+                context['classe_list'] = Classe.objects.filter(status='ACTIF')
+                
+                # Récupérer les prestations enseignants du jour
+                if prestation:
+                    context['prestations_cours'] = PrestationEnseignant.objects.filter(
+                        prestation=prestation
+                    ).select_related('cours', 'classe').order_by('heure_debut')
         except Prestation.DoesNotExist:
-            context['peut_pointer_arrivee'] = True
+            if session.statut == 'EN_COURS':
+                context['peut_pointer_arrivee'] = True
     
+    # Ajouter la session au contexte pour pouvoir vérifier session.heure_fermeture dans le template
+    context['session'] = session
     return render(request, 'prestation/pointage.html', context)
 
 
@@ -255,13 +426,38 @@ def prestations_enseignants_list(request):
         ).order_by('-prestation__date', 'heure_debut')
     
     by_date = {}
+    total_by_date = {}
     for pe in prestations:
         date_key = pe.prestation.date
         if date_key not in by_date:
             by_date[date_key] = []
+            total_by_date[date_key] = 0
         by_date[date_key].append(pe)
+        # Calculer la durée en minutes
+        if pe.heure_debut and pe.heure_fin:
+            from datetime import datetime
+            debut = datetime.combine(pe.prestation.date, pe.heure_debut)
+            fin = datetime.combine(pe.prestation.date, pe.heure_fin)
+            duree = fin - debut
+            total_by_date[date_key] += duree.seconds // 60
     
-    return render(request, 'prestation/prestations_enseignants_list.html', {'prestations_by_date': by_date})
+    return render(request, 'prestation/prestations_enseignants_list.html', {
+        'prestations_by_date': by_date,
+        'total_by_date': total_by_date
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.utilisateur.role in ['ADMIN', 'SECRETAIRE'])
+def valider_prestation_enseignant(request, prestation_enseignant_id):
+    pe = get_object_or_404(PrestationEnseignant, pk=prestation_enseignant_id)
+    if request.method == 'POST':
+        pe.valide = True
+        pe.valide_par = request.user.utilisateur
+        pe.date_validation = timezone.now()
+        pe.save()
+        messages.success(request, f'Prestation enseignant validée avec succès : {pe.cours.libelle} - {pe.classe.nom}')
+    return redirect('prestations_enseignants_list')
 
 
 @login_required
@@ -273,6 +469,7 @@ def mon_historique(request):
     date_filter = request.GET.get('date', '')
     mois_filter = request.GET.get('mois', '')
     annee_filter = request.GET.get('annee', '')
+    statut_filter = request.GET.get('statut', '')
 
     # Construire le queryset de base
     queryset = Prestation.objects.filter(agent=agent)
@@ -284,6 +481,10 @@ def mon_historique(request):
         queryset = queryset.filter(date__year=annee_filter, date__month=mois_filter)
     elif annee_filter:
         queryset = queryset.filter(date__year=annee_filter)
+    
+    # Filtrer par statut si demandé
+    if statut_filter:
+        queryset = queryset.filter(statut=statut_filter)
 
     # Statistiques basées sur le filtre
     stats = {
@@ -313,6 +514,7 @@ def mon_historique(request):
         'date_filter': date_filter,
         'mois_filter': mois_filter,
         'annee_filter': annee_filter,
+        'statut_filter': statut_filter,
         'annees_list': annees_list,
         'mois_choices': mois_choices,
     }
@@ -361,6 +563,7 @@ def modifier_mes_infos(request):
     return render(request, 'prestation/modifier_mes_infos.html', {
         'form': form,
         'agent': agent,
+        'mot_de_passe_temporaire': request.user.utilisateur.mot_de_passe_temporaire,
     })
 
 
@@ -933,24 +1136,87 @@ def utilisateur_delete(request, utilisateur_id):
 
 @login_required
 def messages_view(request):
-    msgs = Remarque.objects.filter(
-        Q(expediteur=request.user) | Q(destinataire=request.user)
-    ).select_related('expediteur', 'destinataire').order_by('-created_at')
+    user_role = request.user.utilisateur.role
+    
+    if user_role in ['AGENT', 'ENSEIGNANT']:
+        # Agents et enseignants ne voient que les messages envoyés par les administrateurs
+        msgs = Remarque.objects.filter(
+            destinataire=request.user,
+            expediteur__utilisateur__role='ADMIN'
+        ).select_related('expediteur', 'destinataire').order_by('-created_at')
+    else:
+        # Admin et secrétaire voient tous leurs messages
+        msgs = Remarque.objects.filter(
+            Q(expediteur=request.user) | Q(destinataire=request.user)
+        ).select_related('expediteur', 'destinataire').order_by('-created_at')
+    
     return render(request, 'messages/chat.html', {'messages': msgs})
 
 
 @login_required
 def notifications_view(request):
-    return render(request, 'notifications.html', {
-        'notifications': Remarque.objects.filter(destinataire=request.user, categorie='NOTIFICATION').order_by('-created_at')
-    })
+    user_role = request.user.utilisateur.role
+    
+    if user_role in ['AGENT', 'ENSEIGNANT']:
+        # Agents et enseignants ne voient que les notifications envoyées par les administrateurs
+        notifications = Remarque.objects.filter(
+            destinataire=request.user,
+            categorie='NOTIFICATION',
+            expediteur__utilisateur__role='ADMIN'
+        ).order_by('-created_at')
+    else:
+        # Admin et secrétaire voient toutes leurs notifications
+        notifications = Remarque.objects.filter(
+            destinataire=request.user,
+            categorie='NOTIFICATION'
+        ).order_by('-created_at')
+    
+    return render(request, 'notifications.html', {'notifications': notifications})
 
 
 @login_required
 def rapports_view(request):
+    # Récupérer les paramètres de filtre
+    date_debut = request.GET.get('date_debut', '')
+    date_fin = request.GET.get('date_fin', '')
+    service_id = request.GET.get('service', '')
+    agent_id = request.GET.get('agent', '')
+    
+    # Construire le queryset de base
+    prestations = Prestation.objects.select_related('agent', 'agent__service').all()
+    
+    # Appliquer les filtres
+    if date_debut:
+        prestations = prestations.filter(date__gte=date_debut)
+    if date_fin:
+        prestations = prestations.filter(date__lte=date_fin)
+    if service_id:
+        prestations = prestations.filter(agent__service_id=service_id)
+    if agent_id:
+        prestations = prestations.filter(agent_id=agent_id)
+    
+    # Limiter à 1000 résultats pour la performance
+    prestations = prestations.order_by('-date', '-heure_arrivee')[:1000]
+    
+    # Calculer les statistiques
+    total_prestations = prestations.count()
+    stats = {
+        'total_prestations': total_prestations,
+        'agents_presents': prestations.filter(statut='PRESENT').count(),
+        'agents_retard': prestations.filter(statut='RETARD').count(),
+        'agents_absents': prestations.filter(statut='ABSENT').count(),
+        'taux_presence': round((prestations.filter(statut='PRESENT').count() / total_prestations * 100) if total_prestations > 0 else 0, 1),
+    }
+    
     return render(request, 'rapports/index.html', {
         'services': Service.objects.all(),
         'agents': Agent.objects.filter(etat=True),
+        'prestations': prestations,
+        'stats': stats,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'service_id': service_id,
+        'agent_id': agent_id,
     })
 
 
@@ -976,6 +1242,20 @@ def api_dashboard_stats(request):
         'agents_absents': Prestation.objects.filter(date=today, statut='ABSENT').count(),
         'total_prestations': Prestation.objects.filter(date=today).count(),
         'prestations_enseignants': PrestationEnseignant.objects.filter(prestation__date=today).count(),
+    })
+
+
+@login_required
+def api_session_stats(request, session_id):
+    session = get_object_or_404(SessionPrestation, pk=session_id)
+    prestations = Prestation.objects.filter(session=session)
+    
+    return JsonResponse({
+        'total_presents': prestations.filter(statut='PRESENT').count(),
+        'total_retards': prestations.filter(statut='RETARD').count(),
+        'total_absents': prestations.filter(statut='ABSENT').count(),
+        'total_en_cours': prestations.filter(statut='EN_COURS').count(),
+        'total_agents': prestations.count(),
     })
 
 

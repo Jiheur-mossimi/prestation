@@ -17,7 +17,7 @@
         <h4 class="mb-1">Sessions de Prestation</h4>
         <p class="text-muted mb-0">Historique des journées de prestation</p>
     </div>
-    {% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
+    {% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' %}
     <a href="{% url 'ouvrir_session' %}" class="btn btn-primary">
         <i class="bi bi-plus-circle me-2"></i>Nouvelle Session
     </a>
@@ -37,6 +37,9 @@
                             Ouverture: {{ session.heure_ouverture|time:"H:i" }}
                             {% if session.heure_fermeture %}
                             | Fermeture: {{ session.heure_fermeture|time:"H:i" }}
+                            {% endif %}
+                            {% if session.heure_limite %}
+                            | <i class="bi bi-clock text-warning"></i> Limite: {{ session.heure_limite|time:"H:i" }}
                             {% endif %}
                         </p>
                     </div>
@@ -68,7 +71,7 @@
             <div class="card-body text-center py-5">
                 <i class="bi bi-calendar-x" style="font-size: 3rem; color: var(--text-muted);"></i>
                 <p class="text-muted mt-3">Aucune session de prestation enregistrée</p>
-                {% if user.utilisateur.role in 'ADMIN,SECRETAIRE' %}
+                {% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' %}
                 <a href="{% url 'ouvrir_session' %}" class="btn btn-primary mt-2">
                     <i class="bi bi-play-circle me-2"></i>Démarrer la première session
                 </a>

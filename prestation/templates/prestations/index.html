@@ -113,17 +113,9 @@
                         <td>{{ prestation.heure_depart|time:"H:i"|default:"-" }}</td>
                         <td>{{ prestation.duree_prestation|default:"-" }}</td>
                         <td>
-                            {% if prestation.statut == 'PRESENT' %}
-                            <span class="badge badge-success">Présent</span>
-                            {% elif prestation.statut == 'RETARD' %}
-                            <span class="badge badge-warning">Retard</span>
-                            {% elif prestation.statut == 'ABSENT' %}
-                            <span class="badge badge-danger">Absent</span>
-                            {% elif prestation.statut == 'EN_COURS' %}
-                            <span class="badge badge-primary">En cours</span>
-                            {% else %}
-                            <span class="badge badge-secondary">Terminé</span>
-                            {% endif %}
+                            <span class="badge badge-{% if prestation.statut == 'PRESENT' %}success{% elif prestation.statut == 'RETARD' %}warning{% elif prestation.statut == 'ABSENT' %}danger{% elif prestation.statut == 'EN_COURS' %}primary{% else %}secondary{% endif %}">
+                                {{ prestation.get_statut_display_custom }}
+                            </span>
                         </td>
                         <td>
                             <div class="action-buttons">

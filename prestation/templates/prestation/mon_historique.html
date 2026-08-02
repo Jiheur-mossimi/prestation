@@ -8,6 +8,11 @@
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door"></i> Accueil</a></li>
 <li class="breadcrumb-item active" aria-current="page">Mon Historique</li>
+{% if statut_filter %}
+<li class="breadcrumb-item active" aria-current="page">
+    {% if statut_filter == 'PRESENT' %}Présents{% elif statut_filter == 'RETARD' %}Retards{% elif statut_filter == 'ABSENT' %}Absents{% endif %}
+</li>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -68,37 +73,50 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="stat-card stat-card-small success">
-            <div class="stat-icon-sm"><i class="bi bi-person-check"></i></div>
-            <div class="stat-info-sm">
-                <h3>{{ stats.agents_presents }}</h3>
-                <h6>Présents</h6>
+        <a href="?statut=PRESENT{% if mois_filter %}&mois={{ mois_filter }}{% endif %}{% if annee_filter %}&annee={{ annee_filter }}{% endif %}" class="text-decoration-none">
+            <div class="stat-card stat-card-small success hover-card">
+                <div class="stat-icon-sm"><i class="bi bi-person-check"></i></div>
+                <div class="stat-info-sm">
+                    <h3>{{ stats.agents_presents }}</h3>
+                    <h6>Présents</h6>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="stat-card stat-card-small warning">
-            <div class="stat-icon-sm"><i class="bi bi-clock"></i></div>
-            <div class="stat-info-sm">
-                <h3>{{ stats.agents_retard }}</h3>
-                <h6>Retards</h6>
+        <a href="?statut=RETARD{% if mois_filter %}&mois={{ mois_filter }}{% endif %}{% if annee_filter %}&annee={{ annee_filter }}{% endif %}" class="text-decoration-none">
+            <div class="stat-card stat-card-small warning hover-card">
+                <div class="stat-icon-sm"><i class="bi bi-clock"></i></div>
+                <div class="stat-info-sm">
+                    <h3>{{ stats.agents_retard }}</h3>
+                    <h6>Retards</h6>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="stat-card stat-card-small danger">
-            <div class="stat-icon-sm"><i class="bi bi-person-x"></i></div>
-            <div class="stat-info-sm">
-                <h3>{{ stats.agents_absents }}</h3>
-                <h6>Absences</h6>
+        <a href="?statut=ABSENT{% if mois_filter %}&mois={{ mois_filter }}{% endif %}{% if annee_filter %}&annee={{ annee_filter }}{% endif %}" class="text-decoration-none">
+            <div class="stat-card stat-card-small danger hover-card">
+                <div class="stat-icon-sm"><i class="bi bi-person-x"></i></div>
+                <div class="stat-info-sm">
+                    <h3>{{ stats.agents_absents }}</h3>
+                    <h6>Absences</h6>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <h5 class="mb-0"><i class="bi bi-table me-2 text-primary"></i>Historique de mes prestations</h5>
+        <h5 class="mb-0">
+            <i class="bi bi-table me-2 text-primary"></i>
+            {% if statut_filter %}
+                {% if statut_filter == 'PRESENT' %}Jours où vous étiez présent{% elif statut_filter == 'RETARD' %}Jours où vous étiez en retard{% elif statut_filter == 'ABSENT' %}Jours où vous étiez absent{% endif %}
+            {% else %}
+                Historique de mes prestations
+            {% endif %}
+        </h5>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -137,4 +155,23 @@
         </div>
     </div>
 </div>
+
+{% if statut_filter %}
+<div class="mt-3">
+    <a href="{% url 'mon_historique' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Retour à l'historique complet
+    </a>
+</div>
+{% endif %}
+
+<style>
+.hover-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+</style>
 {% endblock %}
