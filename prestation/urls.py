@@ -24,6 +24,8 @@ urlpatterns = [
     
     # Prestations générales
     path('prestations-generales/', views.prestations_list, name='prestations_list'),
+    path('prestations-du-jour/', views.prestations_du_jour, name='prestations_du_jour'),
+    path('prestations-du-jour/<str:statut>/', views.prestations_du_jour, name='prestations_du_jour_filtre'),
     
     # Prestations enseignants
     path('prestations-enseignants/', views.prestations_enseignants_list, name='prestations_enseignants_list'),
@@ -87,4 +89,15 @@ urlpatterns = [
     path('mon-historique/', views.mon_historique, name='mon_historique'),
     path('changer-mot-de-passe/', views.changer_mot_de_passe, name='changer_mot_de_passe'),
     path('modifier-mes-infos/', views.modifier_mes_infos, name='modifier_mes_infos'),
+    path('qr-code-reseau/', views.qr_code_reseau, name='qr_code_reseau'),
+    
+    # 2FA - Google Authenticator
+    path('setup-2fa/', views.setup_2fa, name='setup_2fa'),
+    path('verify-2fa/', views.verify_2fa, name='verify_2fa'),
+    
+    # Tablette de pointage
+    path('tablette/', views.tablette_pointage, name='tablette_pointage'),
+    path('tablette/arrivee/', views.tablette_arrivee, name='tablette_arrivee'),
+    path('tablette/depart/', views.tablette_depart, name='tablette_depart'),
+    path('tablette/prestation-enseignant/', views.tablette_prestation_enseignant, name='tablette_prestation_enseignant'),
 ]

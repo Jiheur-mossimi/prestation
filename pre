@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pointage Départ</title>
+    <link href="{% static 'vendors/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendors/bootstrap-icons/font/bootstrap-icons.css' %}" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .form-container { background: white; border-radius: 24px; padding: 50px 40px; max-width: 480px; width: 90%; box-shadow: 0 25px 70px rgba(0,0,0,0.35); }
+        .icon-header { width: 80px; height: 80px; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 10px 30px rgba(239,68,68,0.4); }
+        .icon-header i { font-size: 2.5rem; color: white; }
+        .form-title { color: #dc2626; font-weight: 800; text-align: center; margin-bottom: 8px; font-size: 1.6rem; }
+        .form-subtitle { color: #6c757d; text-align: center; margin-bottom: 35px; font-size: 0.95rem; }
+        .form-label { font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 0.9rem; }
+        .form-control { padding: 14px 18px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; transition: all 0.3s ease; }
+        .form-control:focus { border-color: #ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,0.1); }
+        .input-group-icon { position: relative; }
+        .input-group-icon i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1.1rem; z-index: 10; }
+        .input-group-icon .form-control { padding-left: 48px; }
+        .btn-submit { background: linear-gradient(135deg, #ef4444, #dc2626); border: none; padding: 16px; font-size: 1.1rem; font-weight: 700; border-radius: 12px; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(239,68,68,0.35); }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(239,68,68,0.5); }
+        .btn-back { color: #6c757d; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: color 0.3s ease; }
+        .btn-back:hover { color: #dc2626; text-decoration: none; }
+        #result { display: none; margin-top: 20px; border-radius: 12px; padding: 16px; font-weight: 600; }
+        .alert-success { background: #d1fae5; color: #065f46; border: none; }
+        .alert-danger { background: #fee2e2; color: #991b1b; border: none; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="icon-header">
+            <i class="bi bi-box-arrow-right"></i>
+        </div>
+        <h2 class="form-title">Pointage Départ</h2>
+        <p class="form-subtitle">Entrez vos identifiants pour pointer votre départ</p>
+        <form id="form-depart">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Username ou Matricule</label>
+                <div class="input-group-icon">
+                    <i class="bi bi-person"></i>
+                    <input type="text" name="username" class="form-control" placeholder="ex: admin" required autofocus>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Mot de passe</label>
+                <div class="input-group-icon">
+                    <i class="bi bi-lock"></i>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-danger btn-submit w-100 mb-3">
+                <i class="bi bi-check-circle me-2"></i>Enregistrer Départ
+            </button>
+            <a href="{% url 'tablette_pointage' %}" class="btn-back d-block text-center">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </form>
+        <div id="result" class="alert"></div>
+    </div>
+    <script>
+        document.getElementById('form-depart').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('{% url "tablette_depart" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            });
+            const data = await response.json();
+            const result = document.getElementById('result');
+            result.style.display = 'block';
+            result.className = 'alert ' + (data.success ? 'alert-success' : 'alert-danger');
+            result.innerHTML = '<i class="bi ' + (data.success ? 'bi-check-circle' : 'bi-exclamation-circle') + ' me-2"></i>' + data.message;
+            if (data.success) { document.getElementById('form-depart').reset(); }
+            setTimeout(() => { result.style.display = 'none'; }, 5000);
+        });
+    </script>
+</body>
+</html>

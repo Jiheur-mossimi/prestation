@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}QR-Code Réseau - Gestion des Prestations{% endblock %}
+
+{% block page_title %}QR-Code de Connexion Réseau{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">QR-Code Réseau</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-wifi me-2"></i>Connexion au Réseau WiFi
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <!-- QR Code -->
+                <div class="mb-4">
+                    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code WiFi" class="img-fluid" style="max-width: 400px; border: 2px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                </div>
+
+                <!-- Instructions -->
+                <div class="alert alert-info mb-4">
+                    <h6><i class="bi bi-info-circle me-2"></i>Comment se connecter ?</h6>
+                    <ol class="text-start mb-0">
+                        <li>Ouvrez l'appareil photo de votre téléphone</li>
+                        <li>Scannez ce QR-code</li>
+                        <li>Une notification apparaîtra vous proposant de se connecter au réseau</li>
+                        <li>Cliquez sur "Se connecter"</li>
+                    </ol>
+                </div>
+
+                <!-- Informations réseau -->
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="mb-3"><i class="bi bi-wifi me-2"></i>Informations du Réseau</h6>
+                        <div class="row g-2">
+                            <div class="col-md-5 text-md-end">
+                                <strong>Nom du réseau (SSID) :</strong>
+                            </div>
+                            <div class="col-md-7 text-md-start">
+                                <code>{{ wifi_info.ssid }}</code>
+                            </div>
+                        </div>
+                        <div class="row g-2 mt-2">
+                            <div class="col-md-5 text-md-end">
+                                <strong>Mot de passe :</strong>
+                            </div>
+                            <div class="col-md-7 text-md-start">
+                                <code>{{ wifi_info.password }}</code>
+                            </div>
+                        </div>
+                        <div class="row g-2 mt-2">
+                            <div class="col-md-5 text-md-end">
+                                <strong>Sécurité :</strong>
+                            </div>
+                            <div class="col-md-7 text-md-start">
+                                <span class="badge bg-success">{{ wifi_info.security }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-4">
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-left me-2"></i>Retour au Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Note importante -->
+        <div class="alert alert-warning mt-3">
+            <h6><i class="bi bi-exclamation-triangle me-2"></i>Note importante</h6>
+            <p class="mb-0 text-start">
+                Ce QR-code contient les informations de connexion au réseau WiFi de l'application. 
+                Ne le partagez pas avec des personnes non autorisées. 
+                Pour modifier les paramètres du réseau, contactez l'administrateur système.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

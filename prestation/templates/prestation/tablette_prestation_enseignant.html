@@ -1,0 +1,318 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prestation Enseignant</title>
+    <link href="{% static 'vendors/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendors/bootstrap-icons/font/bootstrap-icons.css' %}" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding: 20px;
+        }
+        .card-custom {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+            border: none;
+        }
+        .card-header-custom {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 28px 30px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .card-header-custom i {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: #bfdbfe;
+        }
+        .card-header-custom h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+        .card-header-custom p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 0;
+            margin-top: 5px;
+        }
+        .card-body-custom {
+            padding: 30px 35px;
+        }
+        .form-group-custom {
+            margin-bottom: 1.5rem;
+        }
+        .form-group-custom label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #ffffff;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+        .form-group-custom .form-control,
+        .form-group-custom .form-select {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+        .form-group-custom .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-group-custom .form-control:focus,
+        .form-group-custom .form-select:focus {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+            color: white;
+            outline: none;
+        }
+        .form-group-custom .form-select option {
+            color: #1e293b;
+            background: white;
+        }
+        .duree-display {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        .btn-submit {
+            background: #ffffff;
+            border: none;
+            padding: 13px 20px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 10px;
+            width: 100%;
+            color: #2563eb;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-submit:hover {
+            background: #eff6ff;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+        .btn-back {
+            color: #bfdbfe;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .btn-back:hover {
+            color: #ffffff;
+        }
+        #result {
+            display: none;
+            margin-top: 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+        #form-prestation {
+            display: none;
+        }
+        .welcome-banner {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card card-custom">
+        <div class="card-header-custom">
+            <i class="bi bi-book"></i>
+            <h2>Prestation Enseignant</h2>
+            <p>Vérifiez votre identité puis enregistrez votre cours</p>
+        </div>
+        <div class="card-body-custom">
+            <!-- Étape 1 : Login -->
+            <form id="form-login">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="login">
+                <div class="form-group-custom">
+                    <label for="username-enseignant">Username ou Matricule</label>
+                    <input type="text" id="username-enseignant" name="username" class="form-control" placeholder="Entrez votre username ou matricule" required autofocus>
+                </div>
+                <div class="form-group-custom">
+                    <label for="password-enseignant">Mot de passe</label>
+                    <input type="password" id="password-enseignant" name="password" class="form-control" placeholder="Entrez votre mot de passe" required>
+                </div>
+                <button type="submit" class="btn btn-submit">
+                    <i class="bi bi-shield-lock"></i>Vérifier mon identité
+                </button>
+                <a href="{% url 'tablette_pointage' %}" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Retour à la tablette
+                </a>
+            </form>
+
+            <!-- Étape 2 : Formulaire de prestation -->
+            <form id="form-prestation">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="prestation">
+                <input type="hidden" name="username" id="username-hidden">
+                <input type="hidden" name="password" id="password-hidden">
+                <div class="welcome-banner" id="welcome-banner"></div>
+                <div class="form-group-custom">
+                    <label for="cours">Cours <span class="text-danger">*</span></label>
+                    <select id="cours" name="cours" class="form-select" required>
+                        <option value="">Sélectionner un cours</option>
+                        {% for cours in cours_list %}
+                        <option value="{{ cours.id }}">{{ cours.libelle }} (x{{ cours.coefficient }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group-custom">
+                    <label for="classe">Classe <span class="text-danger">*</span></label>
+                    <select id="classe" name="classe" class="form-select" required>
+                        <option value="">Sélectionner une classe</option>
+                        {% for classe in classe_list %}
+                        <option value="{{ classe.id }}">{{ classe.nom }} ({{ classe.niveau }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group-custom">
+                            <label for="heure_debut">Heure Début <span class="text-danger">*</span></label>
+                            <input type="time" id="heure_debut" name="heure_debut" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-custom">
+                            <label for="heure_fin">Heure Fin <span class="text-danger">*</span></label>
+                            <input type="time" id="heure_fin" name="heure_fin" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label>Durée du cours</label>
+                    <div class="duree-display" id="duree-display">--:--</div>
+                </div>
+                <div class="form-group-custom">
+                    <label for="observation">Observation</label>
+                    <textarea id="observation" name="observation" class="form-control" rows="2" placeholder="Remarques optionnelles..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-submit">
+                    <i class="bi bi-check-circle"></i>Enregistrer la Prestation
+                </button>
+                <a href="{% url 'tablette_pointage' %}" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Retour à la tablette
+                </a>
+            </form>
+            <div id="result" class="alert"></div>
+        </div>
+    </div>
+    <script>
+        // Calcul automatique de la durée
+        const heureDebut = document.getElementById('heure_debut');
+        const heureFin = document.getElementById('heure_fin');
+        const dureeDisplay = document.getElementById('duree-display');
+
+        function calculerDuree() {
+            if (heureDebut.value && heureFin.value) {
+                const [h1, m1] = heureDebut.value.split(':').map(Number);
+                const [h2, m2] = heureFin.value.split(':').map(Number);
+                const totalMin = (h2 * 60 + m2) - (h1 * 60 + m1);
+                if (totalMin > 0) {
+                    const heures = Math.floor(totalMin / 60);
+                    const minutes = totalMin % 60;
+                    dureeDisplay.textContent = heures + 'h' + String(minutes).padStart(2, '0');
+                } else {
+                    dureeDisplay.textContent = '--:--';
+                }
+            } else {
+                dureeDisplay.textContent = '--:--';
+            }
+        }
+
+        heureDebut.addEventListener('change', calculerDuree);
+        heureFin.addEventListener('change', calculerDuree);
+
+        // Étape 1 : Vérification du login
+        document.getElementById('form-login').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('{% url "tablette_prestation_enseignant" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            });
+            const data = await response.json();
+            const result = document.getElementById('result');
+            result.style.display = 'block';
+            result.className = 'alert ' + (data.success ? 'alert-success' : 'alert-danger');
+            result.innerHTML = '<i class="bi ' + (data.success ? 'bi-check-circle' : 'bi-exclamation-circle') + ' me-2"></i>' + data.message;
+            if (data.success) {
+                // Afficher le formulaire de prestation
+                document.getElementById('form-login').style.display = 'none';
+                document.getElementById('form-prestation').style.display = 'block';
+                document.getElementById('welcome-banner').textContent = 'Bienvenue ' + data.agent_nom + ' !';
+                document.getElementById('username-hidden').value = document.getElementById('username-enseignant').value;
+                document.getElementById('password-hidden').value = document.getElementById('password-enseignant').value;
+                result.style.display = 'none';
+            }
+            setTimeout(() => { result.style.display = 'none'; }, 5000);
+        });
+
+        // Étape 2 : Enregistrement de la prestation
+        document.getElementById('form-prestation').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('{% url "tablette_prestation_enseignant" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            });
+            const data = await response.json();
+            const result = document.getElementById('result');
+            result.style.display = 'block';
+            result.className = 'alert ' + (data.success ? 'alert-success' : 'alert-danger');
+            result.innerHTML = '<i class="bi ' + (data.success ? 'bi-check-circle' : 'bi-exclamation-circle') + ' me-2"></i>' + data.message;
+            if (data.success) {
+                document.getElementById('form-prestation').reset();
+                dureeDisplay.textContent = '--:--';
+            }
+            setTimeout(() => { result.style.display = 'none'; }, 5000);
+        });
+    </script>
+</body>
+</html>

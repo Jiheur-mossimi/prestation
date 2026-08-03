@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configuration 2FA - Google Authenticator{% endblock %}
+
+{% block page_title %}Configuration Google Authenticator{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active">2FA Setup</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-center">
+                <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>Authentification à Deux Facteurs</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code 2FA" class="img-fluid" style="max-width: 250px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                </div>
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-info-circle me-2"></i>Instructions</h6>
+                    <ol class="text-start mb-0">
+                        <li>Installez Google Authenticator sur votre téléphone</li>
+                        <li>Scannez ce QR code avec l'application</li>
+                        <li>Entrez le code à 6 chiffres généré</li>
+                    </ol>
+                </div>
+                <div class="mb-3">
+                    <strong>Clé secrète (si le QR ne fonctionne pas) :</strong>
+                    <code class="d-block mt-2 p-2 bg-light rounded">{{ secret }}</code>
+                </div>
+                <a href="{% url 'verify_2fa' %}" class="btn btn-primary w-100">
+                    <i class="bi bi-check-circle me-2"></i>J'ai scanné, vérifier
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

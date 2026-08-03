@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablette de Pointage</title>
+    <link href="{% static 'vendors/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendors/bootstrap-icons/font/bootstrap-icons.css' %}" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #1e40af 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .tablette-container { text-align: center; max-width: 700px; width: 100%; padding: 20px; }
+        .logo-circle { width: 140px; height: 140px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.35); }
+        .logo-circle img { max-width: 90px; max-height: 90px; object-fit: contain; }
+        .school-name { color: white; font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .school-subtitle { color: rgba(255,255,255,0.75); font-size: 1.1rem; margin-bottom: 15px; }
+        .clock { color: rgba(255,255,255,0.9); font-size: 1.3rem; font-weight: 600; margin-bottom: 25px; font-variant-numeric: tabular-nums; }
+        .session-status { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 50px; padding: 12px 30px; color: white; margin-bottom: 40px; display: inline-flex; align-items: center; font-weight: 600; font-size: 1rem; }
+        .session-status .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; animation: pulse 2s infinite; }
+        .dot-active { background: #10b981; }
+        .dot-inactive { background: #ef4444; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .btn-pointage { padding: 30px 50px; font-size: 1.6rem; font-weight: 700; border-radius: 20px; margin: 12px; min-width: 320px; display: flex; align-items: center; justify-content: center; gap: 15px; transition: all 0.3s ease; border: none; color: white; text-decoration: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .btn-pointage:hover { transform: translateY(-4px); color: white; text-decoration: none; }
+        .btn-arrivee { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-arrivee:hover { box-shadow: 0 15px 40px rgba(16,185,129,0.5); }
+        .btn-depart { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .btn-depart:hover { box-shadow: 0 15px 40px rgba(239,68,68,0.5); }
+        .btn-enseignant { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .btn-enseignant:hover { box-shadow: 0 15px 40px rgba(59,130,246,0.5); }
+        .btn-pointage i { font-size: 2rem; }
+    </style>
+</head>
+<body>
+    <div class="tablette-container">
+        <div class="logo-circle">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" onerror="this.style.display='none'">
+        </div>
+        <h1 class="school-name">Gestion des Prestations</h1>
+        <p class="school-subtitle">Tablette de Pointage</p>
+        <div class="clock" id="clock"></div>
+        
+        {% if session_active %}
+        <div class="session-status">
+            <span class="dot dot-active"></span>Session en cours
+        </div>
+        {% else %}
+        <div class="session-status">
+            <span class="dot dot-inactive"></span>Aucune session active
+        </div>
+        {% endif %}
+        
+        <div class="d-flex flex-column align-items-center">
+            <a href="{% url 'tablette_arrivee' %}" class="btn btn-pointage btn-arrivee">
+                <i class="bi bi-box-arrow-in-right"></i>Pointage Arrivée
+            </a>
+            <a href="{% url 'tablette_depart' %}" class="btn btn-pointage btn-depart">
+                <i class="bi bi-box-arrow-right"></i>Pointage Départ
+            </a>
+            <a href="{% url 'tablette_prestation_enseignant' %}" class="btn btn-pointage btn-enseignant">
+                <i class="bi bi-book"></i>Prestation Enseignant
+            </a>
+        </div>
+    </div>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const date = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            const time = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('clock').textContent = date + ' • ' + time;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>

@@ -41,15 +41,15 @@
                 <span>Prestations Générales</span>
             </a>
         </li>
-        {% endif %}
-        {% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' %}
         <li>
             <a href="{% url 'rapports' %}" class="{% if 'rapports' in request.path %}active{% endif %}">
                 <i class="bi bi-file-earmark-text"></i>
                 <span>Mon Rapport</span>
             </a>
         </li>
+        {% endif %}
         
+        {% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' %}
         <li class="menu-header">Gestion</li>
         <li>
             <a href="{% url 'agents' %}" class="{% if 'agents' in request.path %}active{% endif %}">
@@ -75,12 +75,14 @@
                 <span>Cours</span>
             </a>
         </li>
+        {% if user.utilisateur.role == 'ADMIN' %}
         <li>
             <a href="{% url 'utilisateurs' %}" class="{% if 'utilisateurs' in request.path %}active{% endif %}">
                 <i class="bi bi-person-gear"></i>
                 <span>Utilisateurs</span>
             </a>
         </li>
+        {% endif %}
         
         <li class="menu-header">Référentiels</li>
         <li>
@@ -95,7 +97,9 @@
                 <span>Mois</span>
             </a>
         </li>
+        {% endif %}
         
+        {% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' %}
         <li class="menu-header">Communication</li>
         <li>
             <a href="{% url 'messages' %}" class="{% if 'messages' in request.path %}active{% endif %}">
@@ -104,11 +108,25 @@
             </a>
         </li>
         <li>
-            <a href="{% url 'notifications' %}" class="{% if 'notifications' in request.path %}active{% endif %}">
-                <i class="bi bi-bell"></i>
-                <span>Notifications</span>
+            <a href="{% url 'setup_2fa' %}" class="{% if 'setup-2fa' in request.path %}active{% endif %}">
+                <i class="bi bi-shield-lock"></i>
+                <span>Google Authenticator</span>
             </a>
         </li>
+        {% if user.utilisateur.role == 'ADMIN' %}
+        <li>
+            <a href="{% url 'changer_mot_de_passe' %}" class="{% if 'changer-mot-de-passe' in request.path %}active{% endif %}">
+                <i class="bi bi-key"></i>
+                <span>Changer Mot de Passe</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'qr_code_reseau' %}" class="{% if 'qr-code-reseau' in request.path %}active{% endif %}">
+                <i class="bi bi-qr-code"></i>
+                <span>QR-Code Réseau</span>
+            </a>
+        </li>
+        {% endif %}
         {% endif %}
         
         {% if user.utilisateur.role != 'ADMIN' and user.utilisateur.role != 'SECRETAIRE' %}
@@ -141,7 +159,9 @@
                     {% endif %}
                 </div>
                 <div class="sidebar-user-info">
+                    {% if user.utilisateur.role != 'SECRETAIRE' %}
                     <div class="sidebar-user-name">{{ user.username }}</div>
+                    {% endif %}
                     <div class="sidebar-user-role">{{ user.utilisateur.get_role_display }}</div>
                 </div>
             </div>

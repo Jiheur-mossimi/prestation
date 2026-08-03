@@ -152,6 +152,16 @@ class Utilisateur(models.Model):
         default='',
         help_text='Mot de passe temporaire visible par l\'administrateur (effacé après changement par l\'utilisateur)'
     )
+    two_factor_secret = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text='Clé secrète pour Google Authenticator (2FA)'
+    )
+    two_factor_enabled = models.BooleanField(
+        default=False,
+        help_text='Indique si le 2FA est activé pour cet utilisateur'
+    )
 
     class Meta:
         ordering = ['user__username']
@@ -315,7 +325,7 @@ class SessionPrestation(models.Model):
         ('TERMINEE', 'Terminée'),
     )
 
-    date = models.DateField(unique=True)
+    date = models.DateField()
     heure_ouverture = models.TimeField(null=True, blank=True)
     heure_fermeture = models.TimeField(null=True, blank=True)
     heure_limite = models.TimeField(
@@ -421,12 +431,7 @@ class Prestation(models.Model):
             models.Index(fields=['date']),
             models.Index(fields=['statut']),
         ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=['agent', 'date'],
-                name='unique_prestation_agent_date'
-            ),
-        ]
+        constraints = []
 
     def __str__(self):
         return f"{self.agent.nom_complet()} - {self.date.strftime('%d/%m/%Y')} ({self.get_statut_display()})"

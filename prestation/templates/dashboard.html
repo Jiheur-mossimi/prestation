@@ -28,7 +28,7 @@
         </a>
     </div>
     <div class="col-md-3">
-        <a href="{% url 'pointage' %}" class="text-decoration-none">
+        <a href="{% url 'prestations_du_jour_filtre' 'PRESENT' %}" class="text-decoration-none">
             <div class="stat-card stat-card-small success">
                 <div class="stat-icon-sm"><i class="bi bi-person-check"></i></div>
                 <div class="stat-info-sm">
@@ -39,7 +39,7 @@
         </a>
     </div>
     <div class="col-md-3">
-        <a href="{% url 'sessions_list' %}" class="text-decoration-none">
+        <a href="{% url 'prestations_du_jour_filtre' 'RETARD' %}" class="text-decoration-none">
             <div class="stat-card stat-card-small warning">
                 <div class="stat-icon-sm"><i class="bi bi-clock"></i></div>
                 <div class="stat-info-sm">
@@ -50,12 +50,12 @@
         </a>
     </div>
     <div class="col-md-3">
-        <a href="{% url 'services' %}" class="text-decoration-none">
+        <a href="{% url 'prestations_du_jour_filtre' 'ABSENT' %}" class="text-decoration-none">
             <div class="stat-card stat-card-small danger">
-                <div class="stat-icon-sm"><i class="bi bi-diagram-3"></i></div>
+                <div class="stat-icon-sm"><i class="bi bi-person-x"></i></div>
                 <div class="stat-info-sm">
-                    <h3>{{ nb_services }}</h3>
-                    <h6>Total Services</h6>
+                    <h3>{{ stats.agents_absents }}</h3>
+                    <h6>Absents</h6>
                 </div>
             </div>
         </a>

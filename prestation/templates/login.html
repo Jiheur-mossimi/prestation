@@ -76,6 +76,15 @@
                         </button>
                     </div>
                 </div>
+                {% if show_2fa %}
+                <div class="form-group">
+                    <label for="code_2fa">
+                        <i class="bi bi-shield-lock me-1"></i>Code Google Authenticator
+                    </label>
+                    <input type="text" id="code_2fa" name="code_2fa" class="form-control text-center" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required autofocus>
+                    <small class="text-muted">Entrez le code à 6 chiffres de votre application Google Authenticator</small>
+                </div>
+                {% endif %}
                 <button type="submit" class="btn-login">
                     <i class="bi bi-box-arrow-in-right me-2"></i>Connexion
                 </button>

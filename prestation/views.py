@@ -167,9 +167,6 @@ def session_detail(request, session_id):
 @user_passes_test(lambda u: u.utilisateur.role in ['ADMIN', 'SECRETAIRE'])
 def ouvrir_session(request):
     today = date.today()
-    if SessionPrestation.objects.filter(date=today, statut='EN_COURS').exists():
-        messages.warning(request, 'Une session est déjà ouverte pour aujourd\'hui.')
-        return redirect('dashboard')
     
     if request.method == 'POST':
         try:
@@ -181,19 +178,6 @@ def ouvrir_session(request):
                 statut='EN_COURS', 
                 ouvert_par=request.user.utilisateur
             )
-            
-            # Créer les prestations pour tous les agents actifs
-            agents_actifs = Agent.objects.filter(etat=True)
-            count_agents = 0
-            for agent in agents_actifs:
-                _, created = Prestation.objects.get_or_create(
-                    agent=agent, 
-                    date=today, 
-                    session=session,
-                    defaults={'heure_arrivee': None, 'statut': 'ABSENT'}
-                )
-                if created:
-                    count_agents += 1
             
             # Envoyer une notification à tous les agents et enseignants
             sujet = f'Session de prestation ouverte - {today.strftime("%d/%m/%Y")}'
@@ -212,7 +196,7 @@ def ouvrir_session(request):
                 )
                 count_notifications += 1
             
-            messages.success(request, f'Session du {today.strftime("%d/%m/%Y")} ouverte avec succès! {count_agents} agents créés, {count_notifications} notifications envoyées.')
+            messages.success(request, f'Session du {today.strftime("%d/%m/%Y")} ouverte avec succès! {count_notifications} notifications envoyées. Les agents peuvent maintenant pointer leur arrivée.')
             return redirect('dashboard')
         except Exception as e:
             messages.error(request, f'Erreur lors de l\'ouverture de la session: {str(e)}')
@@ -237,11 +221,15 @@ def clore_session(request, session_id):
         # Si l'agent n'a jamais pointé (pas d'heure_arrivee) → marquer ABSENT
         if not prestation.heure_arrivee:
             prestation.statut = Prestation.STATUS_ABSENT
+            prestation.heure_depart = None
             prestation.save()
-        # Si l'agent a pointé arrivée mais pas départ → garder PRESENT ou RETARD
+        # Si l'agent a pointé arrivée mais pas départ → affecter heure actuelle
         elif prestation.heure_arrivee and not prestation.heure_depart:
-            prestation.heure_depart = session.heure_fermeture or timezone.now().time()
-            # Garder le statut PRESENT ou RETARD, ne pas utiliser TERMINE
+            # Récupérer l'heure actuelle pour le départ
+            heure_depart_auto = timezone.now().time()
+            prestation.heure_depart = heure_depart_auto
+            # Garder le statut PRESENT ou RETARD selon l'heure d'arrivée
+            # Ne pas utiliser TERMINE
             prestation.save()
         # Si l'agent a pointé les deux → garder PRESENT ou RETARD
         elif prestation.heure_arrivee and prestation.heure_depart:
@@ -287,6 +275,11 @@ def clore_session(request, session_id):
     
     total_prestations = prestations.count() + count_agents_absents
     messages.success(request, f'Session clôturée avec succès! {total_prestations} prestations traitées ({count_agents_absents} agents ajoutés comme absents).')
+    
+    # Ajouter une notification pour informer que les départs ont été automatiquement pointés
+    count_departs_auto = prestations.filter(heure_arrivee__isnull=False, heure_depart__isnull=False).count()
+    if count_departs_auto > 0:
+        messages.info(request, f'{count_departs_auto} départs ont été automatiquement enregistrés avec l\'heure actuelle.')
     return redirect('session_detail', session_id=session.id)
 
 
@@ -318,25 +311,33 @@ def pointer_arrivee(request):
         return JsonResponse({'success': False, 'message': 'Méthode non autorisée'})
     
     today = date.today()
-    session = SessionPrestation.objects.filter(date=today, statut='EN_COURS').first()
+    session = SessionPrestation.objects.filter(date=today, statut='EN_COURS').order_by('-id').first()
     if not session:
         return JsonResponse({'success': False, 'message': 'Aucune session ouverte'})
     
     agent = request.user.utilisateur.agent
     heure_actuelle = timezone.now().time()
     
+    # Vérifier si l'agent a déjà pointé son arrivée pour CETTE session
+    prestation_existante = Prestation.objects.filter(agent=agent, session=session).first()
+    if prestation_existante and prestation_existante.heure_arrivee:
+        return JsonResponse({'success': False, 'message': 'Arrivée déjà pointée pour cette session'})
+    
     # Déterminer le statut en fonction de l'heure limite
     statut = 'PRESENT'
     if session.heure_limite and heure_actuelle > session.heure_limite:
         statut = 'RETARD'
     
-    prestation, created = Prestation.objects.get_or_create(
-        agent=agent, date=today,
-        defaults={'session': session, 'statut': statut, 'heure_arrivee': heure_actuelle}
-    )
-    if not created:
-        return JsonResponse({'success': False, 'message': 'Arrivée déjà pointée'})
+    if prestation_existante:
+        prestation_existante.heure_arrivee = heure_actuelle
+        prestation_existante.statut = statut
+        prestation_existante.save()
+        return JsonResponse({'success': True, 'message': 'Arrivée enregistrée', 'heure_arrivee': prestation_existante.heure_arrivee.strftime('%H:%M'), 'statut': statut})
     
+    prestation = Prestation.objects.create(
+        agent=agent, date=today, session=session,
+        statut=statut, heure_arrivee=heure_actuelle
+    )
     return JsonResponse({'success': True, 'message': 'Arrivée enregistrée', 'heure_arrivee': prestation.heure_arrivee.strftime('%H:%M'), 'statut': statut})
 
 
@@ -347,7 +348,13 @@ def pointer_depart(request):
     
     today = date.today()
     agent = request.user.utilisateur.agent
-    prestation = get_object_or_404(Prestation, agent=agent, date=today)
+    session = SessionPrestation.objects.filter(date=today, statut='EN_COURS').order_by('-id').first()
+    if not session:
+        return JsonResponse({'success': False, 'message': 'Aucune session ouverte'})
+    
+    prestation = Prestation.objects.filter(agent=agent, session=session).first()
+    if not prestation:
+        return JsonResponse({'success': False, 'message': 'Aucune prestation trouvée pour cette session'})
     if not prestation.heure_arrivee:
         return JsonResponse({'success': False, 'message': 'Vous devez pointer votre arrivée avant le départ'})
     if prestation.heure_depart:
@@ -362,13 +369,13 @@ def pointer_depart(request):
 @login_required
 def pointage(request):
     today = date.today()
-    session = SessionPrestation.objects.filter(date=today).first()
+    session = SessionPrestation.objects.filter(statut='EN_COURS').order_by('-id').first()
     context = {'session_active': session is not None and session.statut == 'EN_COURS', 'peut_pointer_arrivee': False, 'peut_pointer_depart': False, 'prestation_terminee': False}
     
     if session:
         agent = request.user.utilisateur.agent
-        try:
-            prestation = Prestation.objects.get(agent=agent, date=today)
+        prestation = Prestation.objects.filter(agent=agent, session=session).first()
+        if prestation:
             context.update({
                 'peut_pointer_arrivee': not prestation.heure_arrivee and session.statut == 'EN_COURS',
                 'peut_pointer_depart': prestation.heure_arrivee and not prestation.heure_depart and session.statut == 'EN_COURS',
@@ -392,11 +399,10 @@ def pointage(request):
                 context['classe_list'] = Classe.objects.filter(status='ACTIF')
                 
                 # Récupérer les prestations enseignants du jour
-                if prestation:
-                    context['prestations_cours'] = PrestationEnseignant.objects.filter(
-                        prestation=prestation
-                    ).select_related('cours', 'classe').order_by('heure_debut')
-        except Prestation.DoesNotExist:
+                context['prestations_cours'] = PrestationEnseignant.objects.filter(
+                    prestation=prestation
+                ).select_related('cours', 'classe').order_by('heure_debut')
+        else:
             if session.statut == 'EN_COURS':
                 context['peut_pointer_arrivee'] = True
     
@@ -412,6 +418,31 @@ def pointage(request):
 def prestations_list(request):
     sessions = SessionPrestation.objects.all().order_by('-date')
     return render(request, 'prestation/prestations_list.html', {'sessions': sessions})
+
+
+@login_required
+def prestations_du_jour(request, statut=None):
+    today = date.today()
+    # Récupérer toutes les prestations du jour
+    prestations = Prestation.objects.filter(date=today).select_related('agent', 'agent__service').order_by('-heure_arrivee')
+    
+    # Filtrer par statut si fourni
+    if statut:
+        prestations = prestations.filter(statut=statut)
+    
+    # Grouper par statut pour l'affichage
+    context = {
+        'prestations': prestations,
+        'stats': {
+            'PRESENT': Prestation.objects.filter(date=today, statut='PRESENT').count(),
+            'RETARD': Prestation.objects.filter(date=today, statut='RETARD').count(),
+            'ABSENT': Prestation.objects.filter(date=today, statut='ABSENT').count(),
+            'EN_COURS': Prestation.objects.filter(date=today, statut='EN_COURS').count(),
+        },
+        'statut_filtre': statut,
+        'today': today,
+    }
+    return render(request, 'prestation/prestations_du_jour.html', context)
 
 
 @login_required
@@ -572,7 +603,14 @@ def prestation_enseignant_create(request):
     if request.method == 'POST':
         try:
             agent = request.user.utilisateur.agent
-            prestation = Prestation.objects.get(agent=agent, date=date.today())
+            session = SessionPrestation.objects.filter(statut='EN_COURS').order_by('-id').first()
+            if not session:
+                messages.error(request, 'Aucune session en cours')
+                return redirect('prestations_enseignants_list')
+            prestation = Prestation.objects.filter(agent=agent, session=session).first()
+            if not prestation:
+                messages.error(request, 'Vous devez pointer votre arrivée avant d\'enregistrer un cours')
+                return redirect('prestations_enseignants_list')
             cours = get_object_or_404(Cours, pk=request.POST['cours'])
             classe = get_object_or_404(Classe, pk=request.POST['classe'])
             PrestationEnseignant.objects.create(
@@ -954,34 +992,6 @@ def mois_delete(request, mois_id):
 # ==============================
 # VUES SYSTÈME
 # ==============================
-def login_view(request):
-    from django.contrib.auth import authenticate, login as auth_login
-    from django.contrib import messages
-    
-    if request.user.is_authenticated:
-        messages.success(request, 'Bienvenue, vous êtes déjà connecté.')
-        return redirect('dashboard')
-    
-    if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
-        password = request.POST.get('password', '')
-        
-        if not username or not password:
-            messages.error(request, 'Veuillez remplir tous les champs.')
-            return render(request, 'login.html')
-        
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            auth_login(request, user)
-            messages.success(request, f'✅ Connexion réussie ! Bienvenue {user.username}.')
-            return redirect('dashboard')
-        else:
-            messages.error(request, '❌ Identifiants incorrects. Veuillez vérifier votre nom d\'utilisateur et mot de passe.')
-    
-    return render(request, 'login.html')
-
-
 def logout_view(request):
     from django.contrib.auth import logout as auth_logout
     from django.contrib import messages
@@ -1228,6 +1238,387 @@ def parametres_view(request):
 @login_required
 def profile_view(request):
     return render(request, 'profile.html')
+
+
+@login_required
+def qr_code_reseau(request):
+    """Génère un QR-code pour se connecter au réseau WiFi"""
+    import qrcode
+    from io import BytesIO
+    import base64
+    
+    # Informations du réseau WiFi (à personnaliser)
+    wifi_info = {
+        'ssid': 'itel Super 26 Ultra',
+        'password': 'mossimi12',
+        'security': 'WPA',
+    }
+    
+    # Créer la chaîne de connexion WiFi
+    wifi_string = f"WIFI:T:{wifi_info['security']};S:{wifi_info['ssid']};P:{wifi_info['password']};H:false;;"
+    
+    # Générer le QR-code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(wifi_string)
+    qr.make(fit=True)
+    
+    # Créer l'image
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Sauvegarder dans un buffer
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    
+    # Convertir en base64
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+    
+    return render(request, 'prestation/qr_code_reseau.html', {
+        'qr_code': qr_code_base64,
+        'wifi_info': wifi_info,
+    })
+
+
+# ==============================
+# 2FA - GOOGLE AUTHENTICATOR
+# ==============================
+@login_required
+def setup_2fa(request):
+    """Génère un QR code pour configurer Google Authenticator"""
+    import pyotp
+    import qrcode
+    from io import BytesIO
+    import base64
+    
+    utilisateur = request.user.utilisateur
+    
+    # Générer un secret si non existant
+    if not utilisateur.two_factor_secret:
+        utilisateur.two_factor_secret = pyotp.random_base32()
+        utilisateur.save()
+    
+    # Créer l'URI pour Google Authenticator
+    totp = pyotp.TOTP(utilisateur.two_factor_secret)
+    provisioning_uri = totp.provisioning_uri(
+        name=request.user.username,
+        issuer_name="Gestion Prestations"
+    )
+    
+    # Générer le QR code
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(provisioning_uri)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+    
+    return render(request, 'prestation/setup_2fa.html', {
+        'qr_code': qr_code_base64,
+        'secret': utilisateur.two_factor_secret,
+    })
+
+
+@login_required
+def verify_2fa(request):
+    """Vérifie le code 2FA et active l'authentification"""
+    import pyotp
+    
+    utilisateur = request.user.utilisateur
+    
+    if request.method == 'POST':
+        code = request.POST.get('code_2fa', '').strip()
+        totp = pyotp.TOTP(utilisateur.two_factor_secret)
+        
+        if totp.verify(code):
+            utilisateur.two_factor_enabled = True
+            utilisateur.save()
+            messages.success(request, 'Authentification à deux facteurs activée avec succès !')
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Code incorrect. Veuillez réessayer.')
+    
+    return render(request, 'prestation/verify_2fa.html')
+
+
+def login_view(request):
+    """Login avec 2FA pour ADMIN/SECRETAIRE"""
+    from django.contrib.auth import authenticate, login as auth_login
+    
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        code_2fa = request.POST.get('code_2fa', '').strip()
+        
+        if not username or not password:
+            messages.error(request, 'Veuillez remplir tous les champs.')
+            return render(request, 'login.html')
+        
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            utilisateur = user.utilisateur
+            
+            # Vérifier si 2FA est requis (ADMIN/SECRETAIRE)
+            if utilisateur.role in ['ADMIN', 'SECRETAIRE']:
+                if not utilisateur.two_factor_secret:
+                    # Pas de secret 2FA, rediriger vers setup
+                    auth_login(request, user)
+                    messages.warning(request, 'Veuillez configurer Google Authenticator.')
+                    return redirect('setup_2fa')
+                
+                if not utilisateur.two_factor_enabled:
+                    # 2FA pas encore activé, rediriger vers setup
+                    auth_login(request, user)
+                    messages.warning(request, 'Veuillez activer Google Authenticator.')
+                    return redirect('setup_2fa')
+                
+                # Vérifier le code 2FA
+                if not code_2fa:
+                    messages.error(request, 'Code Google Authenticator requis.')
+                    return render(request, 'login.html', {'show_2fa': True, 'username': username})
+                
+                import pyotp
+                totp = pyotp.TOTP(utilisateur.two_factor_secret)
+                if not totp.verify(code_2fa):
+                    messages.error(request, 'Code Google Authenticator incorrect.')
+                    return render(request, 'login.html', {'show_2fa': True, 'username': username})
+            
+            auth_login(request, user)
+            messages.success(request, f'Connexion réussie ! Bienvenue {user.username}.')
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Identifiants incorrects.')
+    
+    return render(request, 'login.html')
+
+
+# ==============================
+# TABLETTE DE POINTAGE
+# ==============================
+def tablette_pointage(request):
+    """Interface tablette de pointage (sans dashboard)"""
+    today = date.today()
+    session = SessionPrestation.objects.filter(date=today, statut='EN_COURS').first()
+    
+    return render(request, 'prestation/tablette_pointage.html', {
+        'session_active': session is not None,
+    })
+
+
+def tablette_arrivee(request):
+    """Pointage arrivée depuis la tablette (username/password)"""
+    if request.method == 'POST':
+        from django.contrib.auth import authenticate
+        import logging
+        
+        logger = logging.getLogger('prestation')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        
+        # 1. Vérifier les identifiants
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            logger.warning(f'Tentative connexion tablette échouée: {username}')
+            return JsonResponse({'success': False, 'message': 'Identifiants incorrects'})
+        
+        # 2. Vérifier que le compte est actif
+        if not user.is_active:
+            return JsonResponse({'success': False, 'message': 'Compte désactivé'})
+        
+        # 3. Récupérer la session EN_COURS la plus récente
+        session = SessionPrestation.objects.filter(statut='EN_COURS').order_by('-id').first()
+        if not session:
+            return JsonResponse({'success': False, 'message': 'Aucune prestation en cours'})
+        
+        agent = user.utilisateur.agent
+        heure_actuelle = timezone.now().time()
+        
+        # 4. Vérifier que l'arrivée n'est pas déjà enregistrée pour CETTE session
+        prestation_existante = Prestation.objects.filter(agent=agent, session=session).first()
+        if prestation_existante and prestation_existante.heure_arrivee:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Votre arrivée est déjà enregistrée pour cette session. Veuillez pointer votre départ.',
+                'proposer_depart': True
+            })
+        
+        # Déterminer le statut
+        statut = 'PRESENT'
+        if session.heure_limite and heure_actuelle > session.heure_limite:
+            statut = 'RETARD'
+        
+        # Enregistrer l'arrivée
+        if prestation_existante:
+            prestation_existante.heure_arrivee = heure_actuelle
+            prestation_existante.statut = statut
+            prestation_existante.save()
+        else:
+            prestation = Prestation.objects.create(
+                agent=agent,
+                date=session.date,
+                session=session,
+                statut=statut,
+                heure_arrivee=heure_actuelle
+            )
+        
+        logger.info(f'Arrivée enregistrée: {agent.nom_complet()} à {heure_actuelle.strftime("%H:%M")}')
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Arrivée enregistrée à {heure_actuelle.strftime("%H:%M")} - Statut: {statut}',
+            'is_enseignant': user.utilisateur.role == 'ENSEIGNANT',
+            'redirect': 'tablette_prestation_enseignant' if user.utilisateur.role == 'ENSEIGNANT' else None
+        })
+    
+    return render(request, 'prestation/tablette_arrivee.html')
+
+
+def tablette_prestation_enseignant(request):
+    """Formulaire de prestation enseignant sur la tablette (2 étapes: login puis formulaire)"""
+    from django.contrib.auth import authenticate
+    import logging
+    
+    logger = logging.getLogger('prestation')
+    
+    if request.method == 'POST':
+        # Récupérer la session EN_COURS la plus récente
+        session = SessionPrestation.objects.filter(statut='EN_COURS').order_by('-id').first()
+        if not session:
+            return JsonResponse({'success': False, 'message': 'Aucune prestation en cours'})
+        
+        action = request.POST.get('action', 'login')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        
+        # Étape 1 : Vérifier les identifiants
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            return JsonResponse({'success': False, 'message': 'Identifiants incorrects'})
+        
+        # Vérifier que le compte est actif
+        if not user.is_active:
+            return JsonResponse({'success': False, 'message': 'Compte désactivé'})
+        
+        # Vérifier que c'est un enseignant
+        if user.utilisateur.role != 'ENSEIGNANT':
+            return JsonResponse({'success': False, 'message': 'Seuls les enseignants peuvent enregistrer des prestations'})
+        
+        agent = user.utilisateur.agent
+        
+        # Vérifier que l'arrivée est enregistrée pour cette session
+        prestation = Prestation.objects.filter(agent=agent, session=session).first()
+        if not prestation or not prestation.heure_arrivee:
+            return JsonResponse({'success': False, 'message': 'Vous devez pointer votre arrivée avant d\'enregistrer un cours'})
+        
+        # Si c'est juste la vérification du login, retourner succès
+        if action == 'login':
+            return JsonResponse({
+                'success': True,
+                'message': f'Bienvenue {agent.nom_complet()} !',
+                'agent_nom': agent.nom_complet()
+            })
+        
+        # Étape 2 : Enregistrer la prestation
+        cours_id = request.POST.get('cours', '')
+        classe_id = request.POST.get('classe', '')
+        heure_debut = request.POST.get('heure_debut', '')
+        heure_fin = request.POST.get('heure_fin', '')
+        
+        if not cours_id or not classe_id or not heure_debut or not heure_fin:
+            return JsonResponse({'success': False, 'message': 'Veuillez remplir tous les champs'})
+        
+        # Vérifier que l'heure de fin est après l'heure de début
+        from datetime import datetime
+        try:
+            debut = datetime.strptime(heure_debut, '%H:%M').time()
+            fin = datetime.strptime(heure_fin, '%H:%M').time()
+            if fin <= debut:
+                return JsonResponse({'success': False, 'message': 'L\'heure de fin doit être postérieure à l\'heure de début'})
+        except ValueError:
+            return JsonResponse({'success': False, 'message': 'Format d\'heure invalide'})
+        
+        cours = get_object_or_404(Cours, pk=cours_id)
+        classe = get_object_or_404(Classe, pk=classe_id)
+        
+        # Créer la prestation enseignant
+        pe = PrestationEnseignant.objects.create(
+            prestation=prestation,
+            cours=cours,
+            classe=classe,
+            heure_debut=heure_debut,
+            heure_fin=heure_fin,
+            observation=request.POST.get('observation', '')
+        )
+        
+        logger.info(f'Prestation enseignant enregistrée: {agent.nom_complet()} - {cours.libelle} - {classe.nom}')
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Prestation enregistrée avec succès ! Durée: {pe.duree_cours()}',
+            'duree': pe.duree_cours()
+        })
+    
+    # GET - Afficher la page avec la card de login
+    return render(request, 'prestation/tablette_prestation_enseignant.html', {
+        'cours_list': Cours.objects.filter(actif=True),
+        'classe_list': Classe.objects.filter(status='ACTIF'),
+    })
+
+
+def tablette_depart(request):
+    """Pointage départ depuis la tablette (username/password)"""
+    if request.method == 'POST':
+        from django.contrib.auth import authenticate
+        import logging
+        
+        logger = logging.getLogger('prestation')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        
+        # 1. Vérifier les identifiants
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            return JsonResponse({'success': False, 'message': 'Identifiants incorrects'})
+        
+        # 2. Récupérer la session EN_COURS la plus récente
+        session = SessionPrestation.objects.filter(statut='EN_COURS').order_by('-id').first()
+        if not session:
+            return JsonResponse({'success': False, 'message': 'Aucune prestation en cours'})
+        
+        agent = user.utilisateur.agent
+        
+        # 3. Vérifier qu'une arrivée existe pour CETTE session
+        prestation = Prestation.objects.filter(agent=agent, session=session).first()
+        if not prestation or not prestation.heure_arrivee:
+            return JsonResponse({'success': False, 'message': 'Aucune arrivée enregistrée pour cette session'})
+        
+        # 4. Vérifier qu'aucun départ n'a été enregistré
+        if prestation.heure_depart:
+            return JsonResponse({'success': False, 'message': 'Départ déjà enregistré'})
+        
+        # Enregistrer le départ
+        heure_depart = timezone.now().time()
+        prestation.heure_depart = heure_depart
+        prestation.save()
+        
+        logger.info(f'Départ enregistré: {agent.nom_complet()} à {heure_depart.strftime("%H:%M")}')
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Départ enregistré à {heure_depart.strftime("%H:%M")} - Durée: {prestation.duree_prestation()}'
+        })
+    
+    return render(request, 'prestation/tablette_depart.html')
 
 
 # ==============================
