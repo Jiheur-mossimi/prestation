@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 {% load static %}
 
@@ -24,47 +25,49 @@
     <div class="card-header">
         <h5><i class="bi bi-funnel me-2"></i>Filtres</h5>
     </div>
+    <form method="GET" action="{% url 'rapports' %}">
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-3">
                 <label class="form-label">Date Début</label>
-                <input type="date" class="form-control">
+                <input type="date" class="form-control" name="date_debut" value="{{ date_debut }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Date Fin</label>
-                <input type="date" class="form-control">
+                <input type="date" class="form-control" name="date_fin" value="{{ date_fin }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Service</label>
-                <select class="form-select">
+                <select class="form-select" name="service">
                     <option value="">Tous</option>
                     {% for service in services %}
-                    <option value="{{ service.id }}">{{ service.nom }}</option>
+                    <option value="{{ service.id }}" {% if service_id|stringformat:"s" == service.id|stringformat:"s" %}selected{% endif %}>{{ service.nom }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-3">
                 <label class="form-label">Agent</label>
-                <select class="form-select">
+                <select class="form-select" name="agent">
                     <option value="">Tous</option>
                     {% for agent in agents %}
-                    <option value="{{ agent.id }}">{{ agent.nom_complet }}</option>
+                    <option value="{{ agent.id }}" {% if agent_id|stringformat:"s" == agent.id|stringformat:"s" %}selected{% endif %}>{{ agent.nom_complet }}</option>
                     {% endfor %}
                 </select>
             </div>
         </div>
         <div class="mt-3">
-            <button class="btn btn-primary">
+            <button type="submit" class="btn btn-primary">
                 <i class="bi bi-search me-2"></i>Générer
             </button>
-            <button class="btn btn-outline ms-2" onclick="window.print()">
+            <button type="button" class="btn btn-outline ms-2" onclick="window.print()">
                 <i class="bi bi-printer me-2"></i>Imprimer
             </button>
-            <button class="btn btn-outline ms-2" onclick="exportToExcel('rapportTable')">
+            <button type="button" class="btn btn-outline ms-2" onclick="exportToExcel('rapportTable')">
                 <i class="bi bi-file-earmark-excel me-2"></i>Excel
             </button>
         </div>
     </div>
+    </form>
 </div>
 
 <!-- Statistics -->
@@ -127,7 +130,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for prestation in prestations %}
+                    {% for prestation in page_obj %}
                     <tr>
                         <td>{{ prestation.agent.nom_complet }}</td>
                         <td>{{ prestation.agent.service.nom }}</td>
@@ -149,6 +152,43 @@
                 </tbody>
             </table>
         </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1&date_debut={{ date_debut }}&date_fin={{ date_fin }}&service={{ service_id }}&agent={{ agent_id }}">Premier</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&date_debut={{ date_debut }}&date_fin={{ date_fin }}&service={{ service_id }}&agent={{ agent_id }}">Précédent</a>
+            </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}&date_debut={{ date_debut }}&date_fin={{ date_fin }}&service={{ service_id }}&agent={{ agent_id }}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&date_debut={{ date_debut }}&date_fin={{ date_fin }}&service={{ service_id }}&agent={{ agent_id }}">Suivant</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&date_debut={{ date_debut }}&date_fin={{ date_fin }}&service={{ service_id }}&agent={{ agent_id }}">Dernier</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    <div class="text-center text-muted mt-2">
+        Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ page_obj.paginator.count }} résultats
     </div>
 </div>
 {% endblock %}

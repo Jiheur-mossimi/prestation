@@ -17,9 +17,11 @@
         <h4 class="mb-1">Liste des Mois</h4>
         <p class="text-muted mb-0">Gérez les mois de l'établissement</p>
     </div>
+    {% if request.user.utilisateur.role == 'ADMIN' %}
     <a href="{% url 'mois_create' %}" class="btn btn-primary">
         <i class="bi bi-plus-circle me-2"></i>Nouveau Mois
     </a>
+    {% endif %}
 </div>
 
 <!-- Search Card -->
@@ -56,12 +58,14 @@
                                 <a href="{% url 'mois_show' mois.id %}" class="action-btn action-btn-view" title="Consulter">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                {% if request.user.utilisateur.role == 'ADMIN' %}
                                 <a href="{% url 'mois_edit' mois.id %}" class="action-btn action-btn-edit" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <button class="action-btn action-btn-delete btn-delete" data-url="{% url 'mois_delete' mois.id %}" data-name="{{ mois.libelle|escapejs }}" title="Supprimer">
                                     <i class="bi bi-trash"></i>
                                 </button>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

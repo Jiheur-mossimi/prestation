@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Validation Prestations Enseignants - Temps Réel{% endblock %}
+
+{% block page_title %}Validation des Prestations Enseignants{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+<li class="breadcrumb-item active" aria-current="page">Validation Prestations Enseignants</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <!-- En-tête avec indicateur -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">
+                        <i class="bi bi-bell me-2 text-primary"></i>Notifications en Temps Réel
+                    </h5>
+                    <small class="text-muted">Les nouvelles prestations apparaîtront automatiquement</small>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="nb-nouvelles" class="badge badge-primary fs-6">0 nouvelle(s)</span>
+                    <div class="spinner-border spinner-border-sm text-primary" id="loading" style="display: none;" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des prestations en attente de validation -->
+        <div class="row" id="liste-prestations">
+            <!-- Les prestations seront chargées ici dynamiquement sous forme de cards -->
+            <div class="col-lg-12" id="no-prestations">
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+                    <p class="text-muted mt-2">Aucune prestation en attente de validation</p>
+                    <small class="text-muted">Les nouvelles prestations apparaîtront automatiquement</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Polling toutes les 3 secondes pour vérifier les nouvelles prestations
+let pollingInterval;
+let prestationsValidees = new Set();
+
+function chargerNouvellesPrestations() {
+    const loading = document.getElementById('loading');
+    const nbNouvelles = document.getElementById('nb-nouvelles');
+    
+    loading.style.display = 'block';
+    
+    fetch("{% url 'api_prestations_enseignants_nouvelles' %}", {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        loading.style.display = 'none';
+        
+        if (data.success === false) {
+            console.error('Erreur:', data.message);
+            return;
+        }
+        
+        // Filtrer les prestations déjà validées
+        const nouvelles = data.prestations.filter(pe => !prestationsValidees.has(pe.id));
+        
+        // Mettre à jour le compteur
+        nbNouvelles.textContent = `${nouvelles.length} nouvelle(s)`;
+        
+        // Jouer un son et afficher une notification pour chaque nouvelle prestation
+        if (nouvelles.length > 0) {
+            jouerSonNotification();
+            afficherNotificationDesktop(nouvelles.length);
+        }
+        
+        // Afficher les nouvelles prestations
+        afficherPrestations(nouvelles);
+    })
+    .catch(error => {
+        loading.style.display = 'none';
+        console.error('Erreur:', error);
+    });
+}
+
+// Jouer un son de notification
+function jouerSonNotification() {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2LkZeWmJqcoqKjpKWmp6irrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLy4vMDEyMzQ1Njc4OTo7PD0+P0ABAwMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QAEDAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLy4vMDEyMzQ1Njc4OTo7PD0+Pw==');
+    audio.volume = 0.3;
+    audio.play().catch(e => console.log('Son non joué:', e));
+}
+
+// Afficher une notification desktop
+function afficherNotificationDesktop(nombre) {
+    if (Notification.permission === 'granted') {
+        new Notification('Nouvelle(s) prestation(s) enseignant(s)', {
+            body: `${nombre} nouvelle(s) prestation(s) en attente de validation`,
+            icon: '{% static "images/logo.png" %}'
+        });
+    } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                new Notification('Nouvelle(s) prestation(s) enseignant(s)', {
+                    body: `${nombre} nouvelle(s) prestation(s) en attente de validation`,
+                    icon: '{% static "images/logo.png" %}'
+                });
+            }
+        });
+    }
+}
+
+// Demander la permission pour les notifications desktop au chargement
+if (Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
+function afficherPrestations(prestations) {
+    const container = document.getElementById('liste-prestations');
+    const noPrestations = document.getElementById('no-prestations');
+    
+    // Masquer le message "aucune prestation" si il y a des prestations
+    if (prestations.length > 0 && noPrestations) {
+        noPrestations.style.display = 'none';
+    } else if (prestations.length === 0 && noPrestations) {
+        noPrestations.style.display = '';
+        return;
+    }
+    
+    // Ajouter les nouvelles prestations sous forme de cards
+    prestations.forEach(pe => {
+        // Vérifier si la prestation n'est pas déjà affichée
+        if (document.getElementById(`prestation-${pe.id}`)) {
+            return;
+        }
+        
+        const cardCol = document.createElement('div');
+        cardCol.className = 'col-lg-6 mb-3';
+        cardCol.id = `prestation-${pe.id}`;
+        
+        cardCol.innerHTML = `
+            <div class="card h-100 border-start border-4 border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">${pe.agent_nom}</h6>
+                                <small class="text-muted">${pe.date}</small>
+                            </div>
+                        </div>
+                        <span class="badge badge-success">Nouveau</span>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <small class="text-muted">Cours</small>
+                            <p class="mb-0"><span class="badge badge-info">${pe.cours}</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Classe</small>
+                            <p class="mb-0">${pe.classe}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <small class="text-muted">Heure</small>
+                            <p class="mb-0"><strong>${pe.heure_debut} - ${pe.heure_fin}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Durée</small>
+                            <p class="mb-0"><strong>${pe.duree}</strong></p>
+                        </div>
+                    </div>
+                    
+                    ${pe.observation ? `
+                    <div class="mb-3">
+                        <small class="text-muted">Observation</small>
+                        <p class="mb-0 text-muted">${pe.observation}</p>
+                    </div>
+                    ` : ''}
+                    
+                    <button class="btn btn-success w-100 btn-valider" data-prestation-id="${pe.id}">
+                        <i class="bi bi-check-circle me-2"></i>Valider cette prestation
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Ajouter la card au container avant le message "no-prestations"
+        if (noPrestations) {
+            container.insertBefore(cardCol, noPrestations);
+        } else {
+            container.appendChild(cardCol);
+        }
+        
+        // Ajouter l'événement de validation
+        const btnValider = cardCol.querySelector('.btn-valider');
+        btnValider.addEventListener('click', function() {
+            validerPrestation('${pe.id}');
+        });
+    });
+}
+
+function validerPrestation(prestationId) {
+    const cardCol = document.getElementById(`prestation-${prestationId}`);
+    const btnValider = cardCol.querySelector('.btn-valider');
+    
+    btnValider.disabled = true;
+    btnValider.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Validation en cours...';
+    
+    fetch(`/prestations-enseignants/valider/${prestationId}/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => {
+        if (response.redirect) {
+            // Si c'est une redirection, c'est que ça a marché
+            return Promise.resolve();
+        }
+        return response.json();
+    })
+    .then(() => {
+        // Marquer comme validée
+        prestationsValidees.add(prestationId);
+        
+        // Supprimer la card avec animation
+        cardCol.style.transition = 'all 0.5s ease';
+        cardCol.style.opacity = '0';
+        cardCol.style.transform = 'scale(0.8)';
+        
+        setTimeout(() => {
+            cardCol.remove();
+            
+            // Vérifier s'il reste des prestations
+            const container = document.getElementById('liste-prestations');
+            const remainingCards = container.querySelectorAll('.prestation-row');
+            
+            if (remainingCards.length === 0) {
+                const noPrestations = document.getElementById('no-prestations');
+                if (noPrestations) {
+                    noPrestations.style.display = '';
+                }
+            }
+        }, 500);
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        btnValider.disabled = false;
+        btnValider.innerHTML = '<i class="bi bi-check-circle me-2"></i>Valider cette prestation';
+        alert('Erreur lors de la validation. Veuillez réessayer.');
+    });
+}
+
+// Fonction pour obtenir le cookie CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Démarrer le polling au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    // Charger immédiatement les prestations existantes
+    chargerNouvellesPrestations();
+    
+    // Polling toutes les 3 secondes
+    pollingInterval = setInterval(chargerNouvellesPrestations, 3000);
+});
+
+// Arrêter le polling quand on quitte la page
+window.addEventListener('beforeunload', function() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+});
+</script>
+{% endblock %}

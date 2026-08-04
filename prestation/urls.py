@@ -31,11 +31,13 @@ urlpatterns = [
     path('prestations-enseignants/', views.prestations_enseignants_list, name='prestations_enseignants_list'),
     path('prestations-enseignants/creer/', views.prestation_enseignant_create, name='prestation_enseignant_create'),
     path('prestations-enseignants/valider/<int:prestation_enseignant_id>/', views.valider_prestation_enseignant, name='valider_prestation_enseignant'),
+    path('validation-prestations-enseignants/', views.validation_prestations_enseignants, name='validation_prestations_enseignants'),
     
     # API temps réel
     path('api/dashboard-stats/', views.api_dashboard_stats, name='api_dashboard_stats'),
     path('api/session/<int:session_id>/stats/', views.api_session_stats, name='api_session_stats'),
     path('api/prestations-en-cours/', views.api_prestations_en_cours, name='api_prestations_en_cours'),
+    path('api/prestations-enseignants/nouvelles/', views.api_prestations_enseignants_nouvelles, name='api_prestations_enseignants_nouvelles'),
     
     # Entités existantes
     path('agents/', views.agents_list, name='agents'),
@@ -100,4 +102,9 @@ urlpatterns = [
     path('tablette/arrivee/', views.tablette_arrivee, name='tablette_arrivee'),
     path('tablette/depart/', views.tablette_depart, name='tablette_depart'),
     path('tablette/prestation-enseignant/', views.tablette_prestation_enseignant, name='tablette_prestation_enseignant'),
+    
+    # Authentification par QR code
+    path('qr-code-wifi/', views.qr_code_wifi, name='qr_code_wifi'),
+    path('mobile-login/', views.mobile_login, name='mobile_login'),
+    path('tablette/verification/', views.tablette_verification, name='tablette_verification'),
 ]

@@ -650,6 +650,36 @@ class ActivityLog(models.Model):
 
 
 # ==========================
+# CODE TEMPORAIRE (AUTH QR)
+# ==========================
+
+class CodeTemporaire(models.Model):
+    """Code unique généré pour l'authentification par QR code"""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='codes_temporaires'
+    )
+    code = models.CharField(max_length=6, unique=True)
+    est_utilise = models.BooleanField(default=False)
+    cree_le = models.DateTimeField(auto_now_add=True)
+    expire_le = models.DateTimeField()
+    
+    class Meta:
+        ordering = ['-cree_le']
+        verbose_name = 'Code temporaire'
+        verbose_name_plural = 'Codes temporaires'
+    
+    def __str__(self):
+        return f"Code {self.code} - {self.user.username} - {'Utilisé' if self.est_utilise else 'Actif'}"
+    
+    def est_valide(self):
+        """Vérifie si le code est encore valide (non utilisé et non expiré)"""
+        from django.utils import timezone
+        return not self.est_utilise and self.expire_le > timezone.now()
+
+
+# ==========================
 # MESSAGING SETTINGS
 # ==========================
 

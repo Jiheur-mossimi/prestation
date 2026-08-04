@@ -17,9 +17,11 @@
         <h4 class="mb-1">Liste des Agents</h4>
         <p class="text-muted mb-0">Gérez tous les agents de l'établissement</p>
     </div>
+    {% if request.user.utilisateur.role == 'ADMIN' %}
     <a href="{% url 'agent_create' %}" class="btn btn-primary">
         <i class="bi bi-plus-circle me-2"></i>Nouveau Agent
     </a>
+    {% endif %}
 </div>
 
 <!-- Filter Card -->
@@ -69,13 +71,15 @@
                 <thead>
                     <tr>
                         <th style="width: 5%; text-align: center;"><input type="checkbox" class="select-all" data-target="agent"></th>
-                        <th style="width: 25%;">Agent</th>
-                        <th style="width: 10%;">Matricule</th>
-                        <th style="width: 15%;">Service</th>
-                        <th style="width: 10%;">Type</th>
-                        <th style="width: 10%;">Téléphone</th>
+                        <th style="width: 30%;">Agent</th>
+                        <th style="width: 12%;">Matricule</th>
+                        <th style="width: 18%;">Service</th>
+                        <th style="width: 12%;">Type</th>
+                        <th style="width: 13%;">Téléphone</th>
                         <th style="width: 10%;">Statut</th>
-                        <th style="width: 15%;">Actions</th>
+                        {% if request.user.utilisateur.role == 'ADMIN' %}
+                        <th style="width: 10%;">Actions</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -106,6 +110,7 @@
                             <span class="badge badge-danger">Inactif</span>
                             {% endif %}
                         </td>
+                        {% if request.user.utilisateur.role == 'ADMIN' %}
                         <td>
                             <div class="action-buttons">
                                 <a href="{% url 'agent_show' agent.id %}" class="action-btn action-btn-view" title="Consulter">
@@ -119,10 +124,11 @@
                                 </button>
                             </div>
                         </td>
+                        {% endif %}
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center py-5">
+                        <td colspan="{% if request.user.utilisateur.role == 'ADMIN' %}8{% else %}7{% endif %}" class="text-center py-5">
                             <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
                             <p class="text-muted mt-2">Aucun personnel trouvé</p>
                         </td>

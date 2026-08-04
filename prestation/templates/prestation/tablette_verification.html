@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification du Code</title>
+    <link href="{% static 'vendors/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendors/bootstrap-icons/font/bootstrap-icons.css' %}" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; padding: 15px; }
+        .card-custom { background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); max-width: 420px; width: 100%; overflow: hidden; border: none; }
+        .card-header-custom { background: linear-gradient(135deg, #059669, #047857); color: white; padding: 25px 30px; text-align: center; }
+        .card-header-custom i { font-size: 2rem; margin-bottom: 8px; }
+        .card-header-custom h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0; }
+        .card-body-custom { padding: 30px; }
+        .form-label { font-weight: 600; color: #334155; font-size: 0.9rem; margin-bottom: 8px; display: block; }
+        .form-control { padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; text-align: center; letter-spacing: 8px; font-size: 1.5rem; font-weight: 700; transition: all 0.2s ease; }
+        .form-control:focus { border-color: #059669; box-shadow: 0 0 0 4px rgba(5,150,105,0.1); outline: none; }
+        .btn-primary-custom { background: linear-gradient(135deg, #059669, #047857); border: none; padding: 14px; font-weight: 600; border-radius: 10px; width: 100%; color: white; font-size: 1rem; transition: all 0.3s ease; }
+        .btn-primary-custom:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(5,150,105,0.4); }
+        .btn-back { color: #64748b; text-decoration: none; font-size: 0.9rem; display: block; text-align: center; margin-top: 15px; }
+        .btn-back:hover { color: #059669; }
+        #result { display: none; margin-top: 20px; border-radius: 10px; font-size: 0.9rem; padding: 15px; }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .steps { background: #f0fdf4; border: 2px solid #d1fae5; border-radius: 10px; padding: 15px; margin-bottom: 20px; font-size: 0.9rem; color: #065f46; }
+        .steps ol { margin: 0; padding-left: 20px; }
+        .steps li { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="card card-custom">
+        <div class="card-header-custom">
+            <i class="bi bi-phone-check"></i>
+            <h2>Vérification du Code</h2>
+            <p style="opacity: 0.8; font-size: 0.85rem; margin: 5px 0 0;">Entrez le code reçu sur votre téléphone</p>
+        </div>
+        <div class="card-body-custom">
+            <div class="steps">
+                <strong>Comment ça marche :</strong>
+                <ol>
+                    <li>Scannez le QR code avec votre téléphone</li>
+                    <li>Entrez votre username sur le téléphone</li>
+                    <li>Un code à 6 chiffres s'affiche sur votre téléphone</li>
+                    <li>Saisissez ce code ci-dessous pour pointer</li>
+                </ol>
+            </div>
+            <form id="form-verification">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Code à 6 chiffres</label>
+                    <input type="text" name="code" class="form-control" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required autofocus>
+                </div>
+                <button type="submit" class="btn btn-primary-custom">
+                    <i class="bi bi-check-circle me-2"></i>Confirmer et Pointer
+                </button>
+                <a href="{% url 'tablette_pointage' %}" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Retour à la tablette
+                </a>
+            </form>
+            <div id="result" class=""></div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('form-verification').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('{% url "tablette_verification" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            });
+            const data = await response.json();
+            const result = document.getElementById('result');
+            result.style.display = 'block';
+            result.className = data.success ? 'success' : 'error';
+            result.innerHTML = '<i class="bi ' + (data.success ? 'bi-check-circle' : 'bi-exclamation-circle') + ' me-2"></i>' + data.message;
+            if (data.success) {
+                document.getElementById('form-verification').reset();
+                setTimeout(() => { result.style.display = 'none'; }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>

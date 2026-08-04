@@ -17,9 +17,11 @@
         <h4 class="mb-1">Liste des Fonctions</h4>
         <p class="text-muted mb-0">Gérez les fonctions de l'établissement</p>
     </div>
+    {% if request.user.utilisateur.role == 'ADMIN' %}
     <a href="{% url 'fonction_create' %}" class="btn btn-primary">
         <i class="bi bi-plus-circle me-2"></i>Nouvelle Fonction
     </a>
+    {% endif %}
 </div>
 
 <!-- Search Card -->
@@ -54,12 +56,14 @@
                                 <a href="{% url 'fonction_show' fonction.id %}" class="action-btn action-btn-view" title="Consulter">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                {% if request.user.utilisateur.role == 'ADMIN' %}
                                 <a href="{% url 'fonction_edit' fonction.id %}" class="action-btn action-btn-edit" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <button class="action-btn action-btn-delete btn-delete" data-url="{% url 'fonction_delete' fonction.id %}" data-name="{{ fonction.libelle|escapejs }}" title="Supprimer">
                                     <i class="bi bi-trash"></i>
                                 </button>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

@@ -8,7 +8,7 @@ from datetime import date, timedelta
 from .models import (
     SessionPrestation, Prestation, PrestationEnseignant,
     Agent, Service, Classe, Cours, Fonction, Mois,
-    Utilisateur, Remarque
+    Utilisateur, Remarque, CodeTemporaire
 )
 from .forms import AgentForm, ServiceForm, CoursForm, ClasseForm, FonctionForm, MoisForm
 
@@ -664,11 +664,13 @@ def agent_create(request):
 
 
 @login_required
+@user_passes_test(lambda u: u.utilisateur.role in ['ADMIN', 'SECRETAIRE'])
 def agent_show(request, agent_id):
     return render(request, 'agents/show.html', {'agent': get_object_or_404(Agent, pk=agent_id)})
 
 
 @login_required
+@user_passes_test(lambda u: u.utilisateur.role == 'ADMIN')
 def agent_edit(request, agent_id):
     agent = get_object_or_404(Agent, pk=agent_id)
     form_title = 'Modifier l\'Agent'
@@ -729,6 +731,7 @@ def service_show(request, service_id):
 
 
 @login_required
+@user_passes_test(lambda u: u.utilisateur.role == 'ADMIN')
 def service_edit(request, service_id):
     service = get_object_or_404(Service, pk=service_id)
     form_title = 'Modifier le Service'
@@ -787,6 +790,7 @@ def classe_show(request, classe_id):
 
 
 @login_required
+@user_passes_test(lambda u: u.utilisateur.role == 'ADMIN')
 def classe_edit(request, classe_id):
     classe = get_object_or_404(Classe, pk=classe_id)
     form_title = 'Modifier la Classe'
@@ -845,6 +849,7 @@ def cours_show(request, cours_id):
 
 
 @login_required
+@user_passes_test(lambda u: u.utilisateur.role == 'ADMIN')
 def cours_edit(request, cours_id):
     cours = get_object_or_404(Cours, pk=cours_id)
     form_title = 'Modifier le Cours'
@@ -903,6 +908,7 @@ def fonction_show(request, fonction_id):
 
 
 @login_required
+@user_passes_test(lambda u: u.utilisateur.role == 'ADMIN')
 def fonction_edit(request, fonction_id):
     fonction = get_object_or_404(Fonction, pk=fonction_id)
     form_title = 'Modifier la Fonction'
@@ -961,6 +967,7 @@ def mois_show(request, mois_id):
 
 
 @login_required
+@user_passes_test(lambda u: u.utilisateur.role == 'ADMIN')
 def mois_edit(request, mois_id):
     mois = get_object_or_404(Mois, pk=mois_id)
     form_title = 'Modifier le Mois'
@@ -1186,14 +1193,17 @@ def notifications_view(request):
 
 @login_required
 def rapports_view(request):
+    from django.core.paginator import Paginator
+    
     # Récupérer les paramètres de filtre
     date_debut = request.GET.get('date_debut', '')
     date_fin = request.GET.get('date_fin', '')
     service_id = request.GET.get('service', '')
     agent_id = request.GET.get('agent', '')
+    page_number = request.GET.get('page', 1)
     
     # Construire le queryset de base
-    prestations = Prestation.objects.select_related('agent', 'agent__service').all()
+    prestations = Prestation.objects.select_related('agent', 'agent__service')
     
     # Appliquer les filtres
     if date_debut:
@@ -1205,10 +1215,7 @@ def rapports_view(request):
     if agent_id:
         prestations = prestations.filter(agent_id=agent_id)
     
-    # Limiter à 1000 résultats pour la performance
-    prestations = prestations.order_by('-date', '-heure_arrivee')[:1000]
-    
-    # Calculer les statistiques
+    # Calculer les statistiques AVANT la pagination
     total_prestations = prestations.count()
     stats = {
         'total_prestations': total_prestations,
@@ -1218,16 +1225,28 @@ def rapports_view(request):
         'taux_presence': round((prestations.filter(statut='PRESENT').count() / total_prestations * 100) if total_prestations > 0 else 0, 1),
     }
     
+    # Trier et paginer (50 résultats par page)
+    prestations = prestations.order_by('-date', '-heure_arrivee')
+    paginator = Paginator(prestations, 50)
+    page_obj = paginator.get_page(page_number)
+    
     return render(request, 'rapports/index.html', {
         'services': Service.objects.all(),
         'agents': Agent.objects.filter(etat=True),
-        'prestations': prestations,
+        'page_obj': page_obj,
         'stats': stats,
         'date_debut': date_debut,
         'date_fin': date_fin,
         'service_id': service_id,
         'agent_id': agent_id,
     })
+
+
+@login_required
+@user_passes_test(lambda u: u.utilisateur.role in ['ADMIN', 'SECRETAIRE'])
+def validation_prestations_enseignants(request):
+    """Page de validation des prestations enseignants en temps réel"""
+    return render(request, 'prestation/validation_prestations_enseignants.html')
 
 
 @login_required
@@ -1473,6 +1492,16 @@ def tablette_arrivee(request):
         
         logger.info(f'Arrivée enregistrée: {agent.nom_complet()} à {heure_actuelle.strftime("%H:%M")}')
         
+        # Créer une notification pour l'agent
+        Remarque.objects.create(
+            categorie='NOTIFICATION',
+            sujet='Pointage arrivée enregistré',
+            message=f'Votre arrivée a été enregistrée à {heure_actuelle.strftime("%H:%M")} - Statut: {statut}',
+            expediteur=user,
+            destinataire=user,
+            lu=False
+        )
+        
         return JsonResponse({
             'success': True,
             'message': f'Arrivée enregistrée à {heure_actuelle.strftime("%H:%M")} - Statut: {statut}',
@@ -1490,9 +1519,10 @@ def tablette_prestation_enseignant(request):
     
     logger = logging.getLogger('prestation')
     
+    # Récupérer la session EN_COURS la plus récente
+    session = SessionPrestation.objects.filter(statut='EN_COURS').order_by('-id').first()
+    
     if request.method == 'POST':
-        # Récupérer la session EN_COURS la plus récente
-        session = SessionPrestation.objects.filter(statut='EN_COURS').order_by('-id').first()
         if not session:
             return JsonResponse({'success': False, 'message': 'Aucune prestation en cours'})
         
@@ -1562,16 +1592,60 @@ def tablette_prestation_enseignant(request):
         
         logger.info(f'Prestation enseignant enregistrée: {agent.nom_complet()} - {cours.libelle} - {classe.nom}')
         
+        # Créer une notification pour le secrétaire/admin
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        # Récupérer tous les utilisateurs ADMIN et SECRETAIRE
+        destinataires = User.objects.filter(
+            utilisateur__role__in=['ADMIN', 'SECRETAIRE'],
+            is_active=True
+        )
+        
+        sujet = f'Nouvelle prestation enseignant - {agent.nom_complet()}'
+        message = (
+            f'Enseignant: {agent.nom_complet()}\n'
+            f'Cours: {cours.libelle}\n'
+            f'Classe: {classe.nom}\n'
+            f'Date: {prestation.date.strftime("%d/%m/%Y")}\n'
+            f'Heure: {heure_debut} - {heure_fin}\n'
+            f'Durée: {pe.duree_cours()}\n'
+            f'Observation: {request.POST.get("observation", "Aucune")}'
+        )
+        
+        # Envoyer la notification à tous les admin/secrétaire
+        for destinataire in destinataires:
+            Remarque.objects.create(
+                categorie='NOTIFICATION',
+                sujet=sujet,
+                message=message,
+                expediteur=user,
+                destinataire=destinataire,
+                lu=False
+            )
+        
+        # Créer une notification de confirmation pour l'enseignant
+        Remarque.objects.create(
+            categorie='NOTIFICATION',
+            sujet='Prestation enseignant enregistrée',
+            message=f'Votre prestation a été enregistrée avec succès.\nCours: {cours.libelle}\nClasse: {classe.nom}\nHeure: {heure_debut} - {heure_fin}\nDurée: {pe.duree_cours()}',
+            expediteur=user,
+            destinataire=user,
+            lu=False
+        )
+        
         return JsonResponse({
             'success': True,
             'message': f'Prestation enregistrée avec succès ! Durée: {pe.duree_cours()}',
-            'duree': pe.duree_cours()
+            'duree': pe.duree_cours(),
+            'prestation_id': pe.id
         })
     
     # GET - Afficher la page avec la card de login
     return render(request, 'prestation/tablette_prestation_enseignant.html', {
         'cours_list': Cours.objects.filter(actif=True),
         'classe_list': Classe.objects.filter(status='ACTIF'),
+        'session_active': session is not None,
     })
 
 
@@ -1613,12 +1687,169 @@ def tablette_depart(request):
         
         logger.info(f'Départ enregistré: {agent.nom_complet()} à {heure_depart.strftime("%H:%M")}')
         
+        # Créer une notification pour l'agent
+        Remarque.objects.create(
+            categorie='NOTIFICATION',
+            sujet='Pointage départ enregistré',
+            message=f'Votre départ a été enregistré à {heure_depart.strftime("%H:%M")} - Durée: {prestation.duree_prestation()}',
+            expediteur=user,
+            destinataire=user,
+            lu=False
+        )
+        
         return JsonResponse({
             'success': True,
             'message': f'Départ enregistré à {heure_depart.strftime("%H:%M")} - Durée: {prestation.duree_prestation()}'
         })
     
     return render(request, 'prestation/tablette_depart.html')
+
+
+# ==============================
+# AUTHENTIFICATION PAR QR CODE
+# ==============================
+def qr_code_wifi(request):
+    """Affiche uniquement le QR code pour se connecter au WiFi"""
+    import qrcode
+    from io import BytesIO
+    import base64
+    
+    # Informations du réseau WiFi
+    wifi_info = {
+        'ssid': 'itel Super 26 Ultra',
+        'password': 'mossimi12',
+        'security': 'WPA',
+    }
+    
+    # Créer la chaîne de connexion WiFi
+    wifi_string = f"WIFI:T:{wifi_info['security']};S:{wifi_info['ssid']};P:{wifi_info['password']};H:false;;"
+    
+    # Générer le QR-code
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+    qr.add_data(wifi_string)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+    
+    return render(request, 'prestation/qr_code_wifi.html', {
+        'qr_code': qr_code_base64,
+        'wifi_info': wifi_info,
+    })
+
+
+def mobile_login(request):
+    """Vérifie le user sur le téléphone et génère un code unique"""
+    from django.contrib.auth.models import User
+    import random
+    import string
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        
+        # Vérifier si le user existe
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Utilisateur introuvable'})
+        
+        # Vérifier que le compte est actif
+        if not user.is_active:
+            return JsonResponse({'success': False, 'message': 'Compte désactivé'})
+        
+        # Générer un code unique à 6 chiffres
+        code = ''.join(random.choices(string.digits, k=6))
+        
+        # Expiration dans 5 minutes
+        expire_le = timezone.now() + timedelta(minutes=5)
+        
+        # Créer le code temporaire
+        CodeTemporaire.objects.create(
+            user=user,
+            code=code,
+            expire_le=expire_le
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Code généré ! Entrez le code {code} sur la machine',
+            'code': code,
+            'username': username,
+            'expire_le': expire_le.strftime('%H:%M')
+        })
+    
+    return render(request, 'prestation/mobile_login.html')
+
+
+def tablette_verification(request):
+    """Saisie du code sur la machine pour pointer"""
+    from django.utils import timezone
+    
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        
+        # Chercher le code temporaire
+        try:
+            code_temp = CodeTemporaire.objects.get(code=code, est_utilise=False)
+        except CodeTemporaire.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Code invalide ou déjà utilisé'})
+        
+        # Vérifier que le code n'est pas expiré
+        if not code_temp.est_valide():
+            return JsonResponse({'success': False, 'message': 'Code expiré. Veuillez recommencer'})
+        
+        # Marquer le code comme utilisé
+        code_temp.est_utilise = True
+        code_temp.save()
+        
+        # Récupérer la session active
+        session = SessionPrestation.objects.filter(statut='EN_COURS').order_by('-id').first()
+        if not session:
+            return JsonResponse({'success': False, 'message': 'Aucune session en cours'})
+        
+        agent = code_temp.user.utilisateur.agent
+        heure_actuelle = timezone.now().time()
+        
+        # Vérifier si l'agent a déjà pointé pour cette session
+        prestation_existante = Prestation.objects.filter(agent=agent, session=session).first()
+        if prestation_existante and prestation_existante.heure_arrivee:
+            return JsonResponse({
+                'success': False,
+                'message': 'Arrivée déjà enregistrée pour cette session',
+                'proposer_depart': True
+            })
+        
+        # Déterminer le statut
+        statut = 'PRESENT'
+        if session.heure_limite and heure_actuelle > session.heure_limite:
+            statut = 'RETARD'
+        
+        # Enregistrer l'arrivée
+        if prestation_existante:
+            prestation_existante.heure_arrivee = heure_actuelle
+            prestation_existante.statut = statut
+            prestation_existante.save()
+        else:
+            Prestation.objects.create(
+                agent=agent,
+                date=session.date,
+                session=session,
+                statut=statut,
+                heure_arrivee=heure_actuelle
+            )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Arrivée enregistrée pour {agent.nom_complet()} à {heure_actuelle.strftime("%H:%M")} - Statut: {statut}',
+            'agent_nom': agent.nom_complet(),
+            'heure_arrivee': heure_actuelle.strftime('%H:%M'),
+            'statut': statut
+        })
+    
+    return render(request, 'prestation/tablette_verification.html')
 
 
 # ==============================
@@ -1660,3 +1891,39 @@ def api_prestations_en_cours(request):
         'agent__service__nom', 'heure_arrivee', 'statut'
     )[:20]
     return JsonResponse({'prestations': list(prestations)})
+
+
+@login_required
+def api_prestations_enseignants_nouvelles(request):
+    """API pour récupérer les prestations enseignants non validées"""
+    if request.user.utilisateur.role not in ['ADMIN', 'SECRETAIRE']:
+        return JsonResponse({'success': False, 'message': 'Accès refusé'})
+    
+    # Récupérer les prestations enseignants non validées d'aujourd'hui
+    today = date.today()
+    nouvelles_prestations = PrestationEnseignant.objects.filter(
+        prestation__date=today,
+        valide=False
+    ).select_related(
+        'prestation__agent',
+        'cours',
+        'classe'
+    ).order_by('-created_at')
+    
+    result = []
+    for pe in nouvelles_prestations:
+        result.append({
+            'id': pe.id,
+            'agent_nom': pe.prestation.agent.nom_complet(),
+            'cours': pe.cours.libelle,
+            'classe': pe.classe.nom,
+            'heure_debut': pe.heure_debut.strftime('%H:%M') if pe.heure_debut else None,
+            'heure_fin': pe.heure_fin.strftime('%H:%M') if pe.heure_fin else None,
+            'duree': pe.duree_cours(),
+            'observation': pe.observation or '',
+            'date': pe.prestation.date.strftime('%d/%m/%Y'),
+        })
+    
+    return JsonResponse({
+        'prestations': result
+    })

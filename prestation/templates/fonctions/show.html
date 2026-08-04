@@ -20,9 +20,11 @@
                     <i class="bi bi-briefcase me-2 text-primary"></i>{{ fonction.libelle }}
                 </h5>
                 <div class="btn-group">
+                    {% if request.user.utilisateur.role == 'ADMIN' %}
                     <a href="{% url 'fonction_edit' fonction.id %}" class="btn btn-primary btn-sm">
                         <i class="bi bi-pencil me-1"></i>Modifier
                     </a>
+                    {% endif %}
                     <a href="{% url 'fonctions' %}" class="btn btn-secondary btn-sm">
                         <i class="bi bi-arrow-left me-1"></i>Retour
                     </a>

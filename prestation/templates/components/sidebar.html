@@ -24,15 +24,16 @@
         </li>
         {% if user.utilisateur.role == 'ADMIN' or user.utilisateur.role == 'SECRETAIRE' %}
         <li>
-            <a href="{% url 'sessions_list' %}" class="{% if 'sessions' in request.path %}active{% endif %}">
-                <i class="bi bi-calendar-check"></i>
-                <span>Sessions Prestation</span>
-            </a>
-        </li>
-        <li>
             <a href="{% url 'prestations_enseignants_list' %}" class="{% if 'prestations-enseignants' in request.path %}active{% endif %}">
                 <i class="bi bi-book"></i>
                 <span>Prestations Enseignants</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'validation_prestations_enseignants' %}" class="{% if 'validation-prestations-enseignants' in request.path %}active{% endif %}">
+                <i class="bi bi-bell"></i>
+                <span>Validation Enseignants</span>
+                <span class="badge badge-danger ms-auto" id="nav-badge-validation" style="display: none;">0</span>
             </a>
         </li>
         <li>
