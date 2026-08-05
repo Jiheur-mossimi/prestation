@@ -61,6 +61,30 @@
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label">Enseignant Responsable</label>
+                        <select name="enseignant_responsable" class="form-select">
+                            <option value="">-- Sélectionner un enseignant (optionnel) --</option>
+                            {% for agent in agents %}
+                                <option value="{{ agent.id }}" {% if form.enseignant_responsable.value == agent.id %}selected{% endif %}>
+                                    {{ agent.nom_complet }} ({{ agent.matricule }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.enseignant_responsable.errors %}
+                            <div class="text-danger mt-1">{{ form.enseignant_responsable.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Heures de Prestation</label>
+                        <input type="number" name="heures_ponderation" class="form-control" value="{{ form.heures_ponderation.value|default:0 }}" min="0" placeholder="Ex: 60">
+                        <small class="form-text">Nombre total d'heures de prestation pour ce cours</small>
+                        {% if form.heures_ponderation.errors %}
+                            <div class="text-danger mt-1">{{ form.heures_ponderation.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label">Description</label>
                         <textarea name="description" class="form-control" rows="3" placeholder="Description du cours...">{{ form.description.value|default:'' }}</textarea>
                         {% if form.description.errors %}

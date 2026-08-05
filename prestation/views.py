@@ -274,12 +274,15 @@ def clore_session(request, session_id):
         )
     
     total_prestations = prestations.count() + count_agents_absents
-    messages.success(request, f'Session clôturée avec succès! {total_prestations} prestations traitées ({count_agents_absents} agents ajoutés comme absents).')
     
     # Ajouter une notification pour informer que les départs ont été automatiquement pointés
     count_departs_auto = prestations.filter(heure_arrivee__isnull=False, heure_depart__isnull=False).count()
     if count_departs_auto > 0:
         messages.info(request, f'{count_departs_auto} départs ont été automatiquement enregistrés avec l\'heure actuelle.')
+    
+    # Message de confirmation professionnel pour la clôture
+    messages.success(request, f'✅ Session de prestation du {session.date.strftime("%d/%m/%Y")} clôturée avec succès à {session.heure_fermeture.strftime("%H:%M")}. {total_prestations} prestations traitées.')
+    
     return redirect('session_detail', session_id=session.id)
 
 
@@ -824,7 +827,31 @@ def classe_delete(request, classe_id):
 # ==============================
 @login_required
 def cours_list(request):
-    return render(request, 'cours/index.html', {'cours': Cours.objects.all()})
+    cours_list = Cours.objects.all().prefetch_related('enseignant_responsable')
+    
+    # Calculer les heures totales pour chaque cours
+    cours_avec_stats = []
+    for cours in cours_list:
+        prestations = PrestationEnseignant.objects.filter(cours=cours)
+        total_minutes = 0
+        for pe in prestations:
+            if pe.heure_debut and pe.heure_fin:
+                from datetime import datetime
+                debut = datetime.combine(pe.prestation.date, pe.heure_debut)
+                fin = datetime.combine(pe.prestation.date, pe.heure_fin)
+                duree = fin - debut
+                total_minutes += duree.seconds // 60
+        
+        heures_totales = total_minutes // 60
+        minutes_totales = total_minutes % 60
+        
+        cours_avec_stats.append({
+            'cours': cours,
+            'total_heures': f"{heures_totales}h{minutes_totales:02d}",
+            'nombre_prestations': prestations.count()
+        })
+    
+    return render(request, 'cours/index.html', {'cours_avec_stats': cours_avec_stats})
 
 
 @login_required
@@ -840,12 +867,35 @@ def cours_create(request):
             messages.error(request, 'Veuillez corriger les erreurs dans le formulaire.')
     else:
         form = CoursForm()
-    return render(request, 'cours/form.html', {'form': form, 'form_title': form_title})
+    return render(request, 'cours/form.html', {
+        'form': form,
+        'form_title': form_title,
+        'agents': Agent.objects.filter(type_agent='ENSEIGNANT', etat=True).order_by('nom', 'postnom', 'prenom')
+    })
 
 
 @login_required
 def cours_show(request, cours_id):
-    return render(request, 'cours/show.html', {'cours': get_object_or_404(Cours, pk=cours_id)})
+    cours = get_object_or_404(Cours, pk=cours_id)
+    # Calculer le total des heures de prestation pour ce cours
+    prestations = PrestationEnseignant.objects.filter(cours=cours).select_related('prestation__agent')
+    total_minutes = 0
+    for pe in prestations:
+        if pe.heure_debut and pe.heure_fin:
+            from datetime import datetime
+            debut = datetime.combine(pe.prestation.date, pe.heure_debut)
+            fin = datetime.combine(pe.prestation.date, pe.heure_fin)
+            duree = fin - debut
+            total_minutes += duree.seconds // 60
+    
+    heures_totales = total_minutes // 60
+    minutes_totales = total_minutes % 60
+    
+    return render(request, 'cours/show.html', {
+        'cours': cours,
+        'total_heures': f"{heures_totales}h{minutes_totales:02d}",
+        'nombre_prestations': prestations.count()
+    })
 
 
 @login_required
@@ -863,7 +913,12 @@ def cours_edit(request, cours_id):
             messages.error(request, 'Veuillez corriger les erreurs dans le formulaire.')
     else:
         form = CoursForm(instance=cours)
-    return render(request, 'cours/form.html', {'form': form, 'form_title': form_title, 'cours': cours})
+    return render(request, 'cours/form.html', {
+        'form': form,
+        'form_title': form_title,
+        'cours': cours,
+        'agents': Agent.objects.filter(type_agent='ENSEIGNANT', etat=True).order_by('nom', 'postnom', 'prenom')
+    })
 
 
 @login_required

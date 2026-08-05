@@ -42,49 +42,65 @@
                 <thead>
                     <tr>
                         <th style="width: 10%;">Code</th>
-                        <th style="width: 30%;">Libellé</th>
-                        <th style="width: 15%;">Coefficient</th>
-                        <th style="width: 15%;">Statut</th>
+                        <th style="width: 20%;">Libellé</th>
+                        <th style="width: 12%;">Enseignant</th>
+                        <th style="width: 10%;">Coeff.</th>
+                        <th style="width: 10%;">Heures</th>
+                        <th style="width: 10%;">Statut</th>
                         <th style="width: 10%;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for cour in cours %}
+                    {% for item in cours_avec_stats %}
                     <tr>
-                        <td><code class="fs-6">{{ cour.code }}</code></td>
+                        <td><code class="fs-6">{{ item.cours.code }}</code></td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
                                 <div class="bg-info text-white rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.25rem;">
                                     <i class="bi bi-book"></i>
                                 </div>
                                 <div>
-                                    <strong>{{ cour.libelle }}</strong>
-                                    {% if cour.description %}
-                                        <br><small class="text-muted">{{ cour.description|truncatechars:40 }}</small>
+                                    <strong>{{ item.cours.libelle }}</strong>
+                                    {% if item.cours.description %}
+                                        <br><small class="text-muted">{{ item.cours.description|truncatechars:40 }}</small>
                                     {% endif %}
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <span class="badge badge-primary fs-6">x{{ cour.coefficient }}</span>
+                            {% if item.cours.enseignant_responsable %}
+                                <i class="bi bi-person-workspace text-primary me-1"></i>{{ item.cours.enseignant_responsable.nom_complet|truncatechars:20 }}
+                            {% else %}
+                                <span class="text-muted">Non assigné</span>
+                            {% endif %}
                         </td>
                         <td>
-                            {% if cour.actif %}
+                            <span class="badge badge-primary fs-6">x{{ item.cours.coefficient }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-warning">{{ item.cours.heures_ponderation }}h</span>
+                        </td>
+                        <td>
+                            {% if item.cours.actif %}
                             <span class="badge badge-success">Actif</span>
                             {% else %}
                             <span class="badge badge-secondary">Inactif</span>
                             {% endif %}
                         </td>
                         <td>
+                            <span class="badge badge-info">{{ item.total_heures }}</span>
+                            <br><small class="text-muted">{{ item.nombre_prestations }} prestation(s)</small>
+                        </td>
+                        <td>
                             <div class="action-buttons">
-                                <a href="{% url 'cours_show' cour.id %}" class="btn action-btn action-btn-view" title="Consulter">
+                                <a href="{% url 'cours_show' item.cours.id %}" class="btn action-btn action-btn-view" title="Consulter">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 {% if request.user.utilisateur.role == 'ADMIN' %}
-                                <a href="{% url 'cours_edit' cour.id %}" class="btn action-btn action-btn-edit" title="Modifier">
+                                <a href="{% url 'cours_edit' item.cours.id %}" class="btn action-btn action-btn-edit" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button class="btn action-btn action-btn-delete btn-delete" data-url="{% url 'cours_delete' cour.id %}" data-name="{{ cour.libelle }}">
+                                <button class="btn action-btn action-btn-delete btn-delete" data-url="{% url 'cours_delete' item.cours.id %}" data-name="{{ item.cours.libelle }}">
                                     <i class="bi bi-trash"></i>
                                 </button>
                                 {% endif %}
@@ -93,7 +109,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center py-5">
+                        <td colspan="7" class="text-center py-5">
                             <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
                             <p class="text-muted mt-2">Aucun cours trouvé</p>
                         </td>

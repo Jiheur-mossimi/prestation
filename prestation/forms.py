@@ -56,11 +56,13 @@ class ServiceForm(forms.ModelForm):
 class CoursForm(forms.ModelForm):
     class Meta:
         model = Cours
-        fields = ['code', 'libelle', 'coefficient', 'description', 'actif']
+        fields = ['code', 'libelle', 'coefficient', 'enseignant_responsable', 'heures_ponderation', 'description', 'actif']
         widgets = {
             'code': forms.TextInput(attrs={'class': 'form-control', 'style': 'text-transform: uppercase;', 'placeholder': 'Ex: MATH101'}),
             'libelle': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Mathématiques'}),
             'coefficient': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 10, 'placeholder': 'Coefficient (1-10)'}),
+            'enseignant_responsable': forms.Select(attrs={'class': 'form-select'}),
+            'heures_ponderation': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ex: 60'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Description du cours...'}),
             'actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

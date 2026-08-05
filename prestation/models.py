@@ -245,6 +245,19 @@ class Cours(models.Model):
         default=1,
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
+    enseignant_responsable = models.ForeignKey(
+        'Agent',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cours_enseignants',
+        help_text='Enseignant responsable de ce cours'
+    )
+    heures_ponderation = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0)],
+        help_text='Nombre total d\'heures de prestation pour ce cours (ex: 60)'
+    )
     description = models.TextField(blank=True)
     actif = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

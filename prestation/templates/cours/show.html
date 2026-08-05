@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ cour.libelle }} - Gestion des Prestations{% endblock %}
+{% block title %}{{ cours.libelle }} - Gestion des Prestations{% endblock %}
 
 {% block page_title %}Détails du Cours{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
 <li class="breadcrumb-item"><a href="{% url 'cours' %}">Cours</a></li>
-<li class="breadcrumb-item active" aria-current="page">{{ cour.libelle }}</li>
+<li class="breadcrumb-item active" aria-current="page">{{ cours.libelle }}</li>
 {% endblock %}
 
 {% block content %}
@@ -17,10 +17,10 @@
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="bi bi-book me-2 text-primary"></i>{{ cour.libelle }}
+                    <i class="bi bi-book me-2 text-primary"></i>{{ cours.libelle }}
                 </h5>
                 <div class="btn-group">
-                    <a href="{% url 'cours_edit' cour.id %}" class="btn btn-primary btn-sm">
+                    <a href="{% url 'cours_edit' cours.id %}" class="btn btn-primary btn-sm">
                         <i class="bi bi-pencil me-1"></i>Modifier
                     </a>
                     <a href="{% url 'cours' %}" class="btn btn-secondary btn-sm">
@@ -34,29 +34,59 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="text-muted small">Code</label>
-                                <p class="mb-0 fw-semibold"><code>{{ cour.code }}</code></p>
+                                <p class="mb-0 fw-semibold"><code>{{ cours.code }}</code></p>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="text-muted small">Libellé</label>
-                                <p class="mb-0 fw-semibold">{{ cour.libelle }}</p>
+                                <p class="mb-0 fw-semibold">{{ cours.libelle }}</p>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="text-muted small">Coefficient</label>
-                                <p class="mb-0 fw-semibold">{{ cour.coefficient }}</p>
+                                <p class="mb-0 fw-semibold">{{ cours.coefficient }}</p>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="text-muted small">Statut</label>
                                 <p class="mb-0 fw-semibold">
-                                    <span class="badge badge-{{ cour.actif|yesno:'success,danger' }}">
-                                        {{ cour.actif|yesno:'Actif,Inactif' }}
+                                    <span class="badge badge-{{ cours.actif|yesno:'success,danger' }}">
+                                        {{ cours.actif|yesno:'Actif,Inactif' }}
                                     </span>
                                 </p>
                             </div>
                         </div>
-                        {% if cour.description %}
+                        
+                        <!-- Enseignant responsable -->
+                        <div class="mt-3 pt-3 border-top">
+                            <label class="text-muted small">Enseignant Responsable</label>
+                            <p class="mb-0 fw-semibold">
+                                {% if cours.enseignant_responsable %}
+                                    <i class="bi bi-person-workspace me-2 text-primary"></i>{{ cours.enseignant_responsable.nom_complet }}
+                                {% else %}
+                                    <span class="text-muted">Non assigné</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <!-- Heures de prestation -->
+                        <div class="mt-3 pt-3 border-top">
+                            <label class="text-muted small">Heures de Prestation</label>
+                            <p class="mb-0 fw-semibold">
+                                <i class="bi bi-hourglass-split me-2 text-warning"></i>{{ cours.heures_ponderation }}h
+                            </p>
+                        </div>
+                        
+                        <!-- Total des heures de prestation -->
+                        <div class="mt-3 pt-3 border-top">
+                            <label class="text-muted small">Total Heures de Prestation</label>
+                            <p class="mb-0 fw-semibold">
+                                <i class="bi bi-clock-history me-2 text-info"></i>{{ total_heures }}
+                                <span class="text-muted small">({{ nombre_prestations }} prestation(s))</span>
+                            </p>
+                        </div>
+                        
+                        {% if cours.description %}
                         <div class="mt-3 pt-3 border-top">
                             <label class="text-muted small">Description</label>
-                            <p class="mb-0">{{ cour.description }}</p>
+                            <p class="mb-0">{{ cours.description }}</p>
                         </div>
                         {% endif %}
                     </div>
@@ -65,11 +95,11 @@
                             <h6 class="text-muted mb-3"><i class="bi bi-info-circle me-2"></i>Informations</h6>
                             <div class="d-flex justify-content-between py-2 border-bottom">
                                 <span class="text-muted">Créé le</span>
-                                <strong>{{ cour.created_at|date:"d/m/Y" }}</strong>
+                                <strong>{{ cours.created_at|date:"d/m/Y" }}</strong>
                             </div>
                             <div class="d-flex justify-content-between py-2">
                                 <span class="text-muted">Modifié le</span>
-                                <strong>{{ cour.updated_at|date:"d/m/Y" }}</strong>
+                                <strong>{{ cours.updated_at|date:"d/m/Y" }}</strong>
                             </div>
                         </div>
                     </div>
